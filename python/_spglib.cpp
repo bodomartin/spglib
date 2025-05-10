@@ -15,6 +15,22 @@ PYBIND11_MODULE(_spglib, module) {
     using namespace py::literals;
     using namespace spglib;
     module.doc() = "Spglib compiled bindings.";
+
+    py::class_<Lattice>(module, "Lattice").def(py::init<array_double>());
+    py::implicitly_convertible<array_double, Lattice>();
+    py::class_<Rotations>(module, "Rotations").def(py::init<array_int>());
+    py::implicitly_convertible<array_int, Rotations>();
+    py::class_<Translations>(module, "Translations")
+        .def(py::init<array_double>());
+    py::implicitly_convertible<array_double, Translations>();
+    py::class_<Symmetries>(module, "Symmetries")
+        .def(py::init<Rotations, Translations>());
+    py::class_<Positions>(module, "Positions").def(py::init<array_double>());
+    py::implicitly_convertible<array_double, Positions>();
+    py::class_<AtomTypes>(module, "AtomTypes").def(py::init<array_int>());
+    py::implicitly_convertible<array_int, AtomTypes>();
+    py::class_<Atoms>(module, "Atoms").def(py::init<Positions, AtomTypes>());
+
     module.def("version_tuple", spglib::version_tuple, "");
     module.def("version_string", spglib::version_string, "");
     module.def("version_full", spglib::version_full, "");

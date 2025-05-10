@@ -18,6 +18,73 @@ using array_uintp =
     py::array_t<uintptr_t, py::array::c_style | py::array::forcecast>;
 using array_size_t =
     py::array_t<size_t, py::array::c_style | py::array::forcecast>;
+
+class Lattice {
+    array_double array;
+
+   public:
+    explicit Lattice(array_double&& _array);
+    double (*data())[3];
+    [[nodiscard]] double const (*data() const)[3];
+};
+
+class Rotations {
+    array_int array;
+
+   public:
+    int const n_operations;
+    explicit Rotations(array_int&& _array);
+    int (*data())[3][3];
+    [[nodiscard]] int const (*data() const)[3][3];
+};
+
+class Translations {
+    array_double array;
+
+   public:
+    int const n_operations;
+    explicit Translations(array_double&& _array);
+    double (*data())[3];
+    [[nodiscard]] double const (*data() const)[3];
+};
+
+class Symmetries {
+   public:
+    Rotations const rotations;
+    Translations const translations;
+    int const n_operations;
+    Symmetries(Rotations&& _rotations, Translations&& _translations);
+};
+
+class Positions {
+    array_double array;
+
+   public:
+    int const n_atoms;
+    explicit Positions(array_double&& _array);
+    double (*data())[3];
+    [[nodiscard]] double const (*data() const)[3];
+};
+
+class AtomTypes {
+    array_int array;
+
+   public:
+    int const n_atoms;
+    explicit AtomTypes(array_double&& _array);
+    int* data();
+    [[nodiscard]]
+    int const* data() const;
+};
+
+class Atoms {
+   public:
+    Positions const positions;
+    AtomTypes const types;
+    int const n_atoms;
+    Atoms(Positions&& _positions, AtomTypes&& _types);
+};
+
 py::tuple version_tuple();
 py::str version_string();
 py::str version_full();

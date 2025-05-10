@@ -26,6 +26,85 @@ void try_throw_error() {
     throw std::runtime_error(msg);
 }
 
+Lattice::Lattice(array_double&& _array)
+    : array{std::forward<array_double>(_array)} {
+    if (array.ndim() != 2) throw std::invalid_argument("Lattice ndim is not 2");
+    if (array.shape(0) != 3 || array.shape(1) != 3)
+        throw std::invalid_argument("Lattice is not a 3x3 matrix");
+}
+double (*Lattice::data())[3] {
+    return reinterpret_cast<double (*)[3]>(array.mutable_data());
+}
+double const (*Lattice::data() const)[3] {
+    return reinterpret_cast<double const(*)[3]>(array.data());
+}
+Rotations::Rotations(array_int&& _array)
+    : array{std::forward<array_int>(_array)},
+      n_operations(static_cast<int>(array.shape(0))) {
+    if (array.ndim() != 3)
+        throw std::invalid_argument("Rotations ndim is not 3");
+    if (array.shape(1) != 3 || array.shape(2) != 3)
+        throw std::invalid_argument("Lattice is not a nx3x3 matrix");
+}
+int (*Rotations::data())[3][3] {
+    return reinterpret_cast<int (*)[3][3]>(array.mutable_data());
+}
+int const (*Rotations::data() const)[3][3] {
+    return reinterpret_cast<int const(*)[3][3]>(array.data());
+}
+Translations::Translations(array_double&& _array)
+    : array{std::forward<array_double>(_array)},
+      n_operations(static_cast<int>(array.shape(0))) {
+    if (array.ndim() != 2)
+        throw std::invalid_argument("Rotations ndim is not 3");
+    if (array.shape(1) != 3)
+        throw std::invalid_argument("Lattice is not a nx3 matrix");
+}
+double (*Translations::data())[3] {
+    return reinterpret_cast<double (*)[3]>(array.mutable_data());
+}
+double const (*Translations::data() const)[3] {
+    return reinterpret_cast<double const(*)[3]>(array.data());
+}
+Symmetries::Symmetries(Rotations&& _rotations, Translations&& _translations)
+    : rotations{std::forward<Rotations>(_rotations)},
+      translations{std::forward<Translations>(_translations)},
+      n_operations{rotations.n_operations} {
+    if (rotations.n_operations != translations.n_operations)
+        throw std::invalid_argument(
+            "Number of Rotations and Translations is inconsistent");
+}
+Positions::Positions(array_double&& _array)
+    : array{std::forward<array_double>(_array)},
+      n_atoms(static_cast<int>(array.shape(0))) {
+    if (array.ndim() != 2)
+        throw std::invalid_argument("Rotations ndim is not 2");
+    if (array.shape(1) != 3)
+        throw std::invalid_argument("Lattice is not a nx3 matrix");
+}
+double (*Positions::data())[3] {
+    return reinterpret_cast<double (*)[3]>(array.mutable_data());
+}
+double const (*Positions::data() const)[3] {
+    return reinterpret_cast<double const(*)[3]>(array.data());
+}
+AtomTypes::AtomTypes(array_double&& _array)
+    : array(std::forward<array_double>(_array)),
+      n_atoms(static_cast<int>(array.shape(0))) {
+    if (array.ndim() != 1)
+        throw std::invalid_argument("Rotations ndim is not 1");
+}
+int* AtomTypes::data() { return array.mutable_data(); }
+int const* AtomTypes::data() const { return array.data(); }
+Atoms::Atoms(Positions&& _positions, AtomTypes&& _types)
+    : positions{std::forward<Positions>(_positions)},
+      types{std::forward<AtomTypes>(_types)},
+      n_atoms(positions.n_atoms) {
+    if (positions.n_atoms != types.n_atoms)
+        throw std::invalid_argument(
+            "Number of Positions and Types is inconsistent");
+}
+
 py::tuple spglib::version_tuple() {
     py::tuple version(3);
     version[0] = spg_get_major_version();
