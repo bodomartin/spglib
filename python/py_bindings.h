@@ -22,25 +22,25 @@ py::tuple version_tuple();
 py::str version_string();
 py::str version_full();
 py::str commit();
-std::optional<py::list> dataset(array_double lattice, array_double positions,
+std::optional<py::dict> dataset(array_double lattice, array_double positions,
                                 array_int atom_types, py::int_ hall_number,
                                 py::float_ symprec, py::float_ angle_tolerance);
-std::optional<py::list> layer_dataset(array_double lattice,
+std::optional<py::dict> layer_dataset(array_double lattice,
                                       array_double positions,
                                       array_int atom_types,
                                       py::int_ aperiodic_dir,
                                       py::float_ symprec);
-std::optional<py::list> magnetic_dataset(
+std::optional<py::dict> magnetic_dataset(
     array_double lattice, array_double positions, array_int atom_types,
     array_double magmoms, py::int_ tensor_rank, py::bool_ is_axial,
     py::float_ symprec, py::float_ angle_tolerance, py::float_ mag_symprec);
-std::optional<py::list> spacegroup_type(py::int_ hall_number);
-std::optional<py::list> spacegroup_type_from_symmetry(array_int rotations,
+std::optional<py::dict> spacegroup_type(py::int_ hall_number);
+std::optional<py::dict> spacegroup_type_from_symmetry(array_int rotations,
                                                       array_double translations,
                                                       array_double lattice,
                                                       py::float_ symprec);
-std::optional<py::list> magnetic_spacegroup_type(py::int_ uni_number);
-std::optional<py::list> magnetic_spacegroup_type_from_symmetry(
+std::optional<py::dict> magnetic_spacegroup_type(py::int_ uni_number);
+std::optional<py::dict> magnetic_spacegroup_type_from_symmetry(
     array_int rotations, array_double translations, array_int time_reversals,
     array_double lattice, py::float_ symprec);
 std::optional<py::int_> symmetry_from_database(array_int rotations,
