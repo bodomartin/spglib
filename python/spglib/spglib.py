@@ -933,9 +933,9 @@ def get_spacegroup(
         return None
 
     if symbol_type == 1:
-        return "%s (%d)" % (spg_type.schoenflies, dataset.number)
+        return f"{spg_type.schoenflies} ({dataset.number})"
     else:
-        return "%s (%d)" % (spg_type.international_short, dataset.number)
+        return f"{spg_type.international_short} ({dataset.number})"
 
 
 def get_spacegroup_type(hall_number: int) -> SpaceGroupType | None:
