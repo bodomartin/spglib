@@ -13,8 +13,8 @@ from .spglib import (
     SpgCell,
     SpglibDataset,
     _expand_cell,
-    _set_error_message,
     _set_no_error,
+    _set_or_throw_error,
 )
 
 __all__ = [
@@ -70,35 +70,42 @@ def get_pointgroup(rotations: ArrayLike[np.intc]) -> tuple[str, int, np.ndarray]
     _set_no_error()
 
     # (symbol, pointgroup_number, transformation_matrix)
-    pointgroup = _spglib.pointgroup(np.array(rotations, dtype="intc", order="C"))
-    _set_error_message()
-    return pointgroup
+    try:
+        return _spglib.pointgroup(np.array(rotations, dtype="intc", order="C"))
+    except Exception as exc:
+        _set_or_throw_error(exc)
+        return None
 
 
 def get_symmetry_layerdataset(
-    cell: SpgCell, aperiodic_dir: int = 2, symprec: float = 1e-5
+    cell: SpgCell,
+    aperiodic_dir: int = 2,
+    symprec: float = 1e-5,
+    _throw: bool = False,
 ) -> SpglibDataset | None:
     """TODO: Add comments."""
-    _set_no_error()
+    _set_no_error(_throw)
 
     lattice, positions, numbers, _ = _expand_cell(cell)
 
-    spg_ds = _spglib.layer_dataset(
-        lattice,
-        positions,
-        numbers,
-        aperiodic_dir,
-        symprec,
-    )
-    if spg_ds is None:
-        _set_error_message()
+    try:
+        spg_ds = _spglib.layer_dataset(
+            lattice,
+            positions,
+            numbers,
+            aperiodic_dir,
+            symprec,
+        )
+    except Exception as exc:
+        _set_or_throw_error(exc, _throw)
         return None
-
     return SpglibDataset(**spg_ds)
 
 
 def get_layergroup(
-    cell: SpgCell, aperiodic_dir: int = 2, symprec: float = 1e-5
+    cell: SpgCell,
+    aperiodic_dir: int = 2,
+    symprec: float = 1e-5,
 ) -> SpglibDataset | None:
     """Return layer group in ....
 
@@ -107,24 +114,33 @@ def get_layergroup(
     """
     _set_no_error()
 
-    dataset = get_symmetry_layerdataset(
-        cell,
-        aperiodic_dir=aperiodic_dir,
-        symprec=symprec,
-    )
-    return dataset
+    try:
+        return get_symmetry_layerdataset(
+            cell,
+            aperiodic_dir=aperiodic_dir,
+            symprec=symprec,
+            _throw=True,
+        )
+    except Exception as exc:
+        _set_or_throw_error(exc)
+        return None
 
 
 def get_grid_point_from_address(
-    grid_address: ArrayLike[np.intc], mesh: ArrayLike[np.intc]
+    grid_address: ArrayLike[np.intc],
+    mesh: ArrayLike[np.intc],
 ) -> int | None:
     """Return grid point index by translating grid address."""
     _set_no_error()
 
-    return _spglib.grid_point_from_address(
-        np.array(grid_address, dtype="intc"),
-        np.array(mesh, dtype="intc"),
-    )
+    try:
+        return _spglib.grid_point_from_address(
+            np.array(grid_address, dtype="intc"),
+            np.array(mesh, dtype="intc"),
+        )
+    except Exception as exc:
+        _set_or_throw_error(exc)
+        return None
 
 
 def get_stabilized_reciprocal_mesh(
@@ -134,7 +150,7 @@ def get_stabilized_reciprocal_mesh(
     is_time_reversal: bool = True,
     qpoints: ArrayLike[np.double] | None = None,
     is_dense: bool = False,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray] | None:
     """Return k-point map to the irreducible k-points and k-point grid points.
 
     The symmetry is searched from the input rotation matrices in real space.
@@ -188,7 +204,7 @@ def get_stabilized_reciprocal_mesh(
         if qpoints.shape == (3,):
             qpoints = np.array([qpoints], dtype="double", order="C")
 
-    if (
+    try:
         _spglib.stabilized_reciprocal_mesh(
             grid_address,
             mapping_table,
@@ -198,12 +214,10 @@ def get_stabilized_reciprocal_mesh(
             np.array(rotations, dtype="intc", order="C"),
             qpoints,
         )
-        > 0
-    ):
-        return mapping_table, grid_address
-    else:
-        _set_error_message()
+    except Exception as exc:
+        _set_or_throw_error(exc)
         return None
+    return mapping_table, grid_address
 
 
 def get_grid_points_by_rotations(
@@ -212,7 +226,7 @@ def get_grid_points_by_rotations(
     mesh: ArrayLike[np.intc],
     is_shift: ArrayLike[np.intc] | None = None,
     is_dense: bool = False,
-) -> np.ndarray:
+) -> np.ndarray | None:
     """Return grid points obtained after rotating input grid address.
 
     Parameters
@@ -249,13 +263,17 @@ def get_grid_points_by_rotations(
         _is_shift = np.array(is_shift, dtype="intc")
 
     rot_grid_points = np.zeros(len(reciprocal_rotations), dtype="uintp")
-    _spglib.grid_points_by_rotations(
-        rot_grid_points,
-        np.array(address_orig, dtype="intc"),
-        np.array(reciprocal_rotations, dtype="intc", order="C"),
-        np.array(mesh, dtype="intc"),
-        _is_shift,
-    )
+    try:
+        _spglib.grid_points_by_rotations(
+            rot_grid_points,
+            np.array(address_orig, dtype="intc"),
+            np.array(reciprocal_rotations, dtype="intc", order="C"),
+            np.array(mesh, dtype="intc"),
+            _is_shift,
+        )
+    except Exception as exc:
+        _set_or_throw_error(exc)
+        return None
 
     if is_dense:
         return rot_grid_points
@@ -270,7 +288,7 @@ def get_BZ_grid_points_by_rotations(
     bz_map: ArrayLike[np.uintp],
     is_shift: ArrayLike[np.intc] | None = None,
     is_dense: bool = False,
-) -> np.ndarray:
+) -> np.ndarray | None:
     """Return grid points obtained after rotating input grid address.
 
     Parameters
@@ -314,14 +332,18 @@ def get_BZ_grid_points_by_rotations(
         _bz_map = np.array(bz_map, dtype="uintp")
 
     rot_grid_points = np.zeros(len(reciprocal_rotations), dtype="uintp")
-    _spglib.BZ_grid_points_by_rotations(
-        rot_grid_points,
-        np.array(address_orig, dtype="intc"),
-        np.array(reciprocal_rotations, dtype="intc", order="C"),
-        np.array(mesh, dtype="intc"),
-        _is_shift,
-        _bz_map,
-    )
+    try:
+        _spglib.BZ_grid_points_by_rotations(
+            rot_grid_points,
+            np.array(address_orig, dtype="intc"),
+            np.array(reciprocal_rotations, dtype="intc", order="C"),
+            np.array(mesh, dtype="intc"),
+            _is_shift,
+            _bz_map,
+        )
+    except Exception as exc:
+        _set_or_throw_error(exc)
+        return None
 
     if is_dense:
         return rot_grid_points
@@ -335,7 +357,7 @@ def relocate_BZ_grid_address(
     reciprocal_lattice: ArrayLike[np.double],  # column vectors
     is_shift: ArrayLike[np.intc] | None = None,
     is_dense: bool = False,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray] | None:
     """Grid addresses are relocated to be inside first Brillouin zone.
 
     Number of ir-grid-points inside Brillouin zone is returned.
@@ -375,14 +397,18 @@ def relocate_BZ_grid_address(
         _is_shift = np.array(is_shift, dtype="intc")
     bz_grid_address = np.zeros((np.prod(np.add(mesh, 1)), 3), dtype="intc")
     bz_map = np.zeros(np.prod(np.multiply(mesh, 2)), dtype="uintp")
-    num_bz_ir = _spglib.BZ_grid_address(
-        bz_grid_address,
-        bz_map,
-        grid_address,
-        np.array(mesh, dtype="intc"),
-        np.array(reciprocal_lattice, dtype="double", order="C"),
-        _is_shift,
-    )
+    try:
+        num_bz_ir = _spglib.BZ_grid_address(
+            bz_grid_address,
+            bz_map,
+            grid_address,
+            np.array(mesh, dtype="intc"),
+            np.array(reciprocal_lattice, dtype="double", order="C"),
+            _is_shift,
+        )
+    except Exception as exc:
+        _set_or_throw_error(exc)
+        return None
 
     if is_dense:
         return bz_grid_address[:num_bz_ir], bz_map

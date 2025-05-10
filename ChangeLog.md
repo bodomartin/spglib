@@ -27,6 +27,8 @@ GitHub release pages and in the git history.
 - Switched to using pybind11 for generating the python bindings
 - Added free-threading support using pybind11.
   Requires pybind11 >= 2.13.
+- Deprecated `get_error_message()` and `error` attributes.
+- Python functions can now raise exceptions. To opt-in set `spglib.OLD_ERROR_HANLDING=False`
 
 ### Fortran API
 

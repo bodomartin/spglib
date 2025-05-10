@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import dataclasses
+import os
 import warnings
 from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING, Union, cast
@@ -50,6 +51,7 @@ __all__ = [
     "spg_get_version",
     "spg_get_version_full",
     "standardize_cell",
+    "Config",
 ]
 
 warnings.filterwarnings(
@@ -67,6 +69,18 @@ MsgCell: TypeAlias = tuple[Lattice, Positions, Numbers, Magmoms]
 (lattice, positions, numbers, magmoms)."""
 Cell: TypeAlias = Union[SpgCell, MsgCell]
 """Either SpgCell or MsgCell."""
+
+
+class Config:
+    """Container for Spglib configurations."""
+
+    OLD_ERROR_HANDLING: bool = True
+    """
+    Use the old error handling.
+
+    Note that this variable may be removed in the future or change value in the future.
+    You can also use :envvar:`SPGLIB_OLD_ERROR_HANDLING` instead of altering this value.
+    """
 
 
 class SpglibError:
@@ -595,15 +609,16 @@ def get_symmetry(
 
     if magmoms is None:
         # Get symmetry operations without on-site tensors (i.e. normal crystal)
-        dataset = get_symmetry_dataset(
-            cast(SpgCell, cell),
-            symprec=symprec,
-            angle_tolerance=angle_tolerance,
-        )
-        if dataset is None:
-            _set_error_message()
+        try:
+            dataset = get_symmetry_dataset(
+                cast(SpgCell, cell),
+                symprec=symprec,
+                angle_tolerance=angle_tolerance,
+                _throw=True,
+            )
+        except Exception as exc:
+            _set_or_throw_error(exc)
             return None
-
         return {
             "rotations": dataset.rotations,
             "translations": dataset.translations,
@@ -615,14 +630,19 @@ def get_symmetry(
             DeprecationWarning,
             stacklevel=1,
         )
-        return get_magnetic_symmetry(
-            cast(MsgCell, cell),
-            symprec=symprec,
-            angle_tolerance=angle_tolerance,
-            mag_symprec=mag_symprec,
-            is_axial=None,
-            with_time_reversal=is_magnetic,
-        )
+        try:
+            return get_magnetic_symmetry(
+                cast(MsgCell, cell),
+                symprec=symprec,
+                angle_tolerance=angle_tolerance,
+                mag_symprec=mag_symprec,
+                is_axial=None,
+                with_time_reversal=is_magnetic,
+                _throw=True,
+            )
+        except Exception as exc:
+            _set_or_throw_error(exc)
+            return None
 
 
 def get_magnetic_symmetry(
@@ -632,6 +652,7 @@ def get_magnetic_symmetry(
     mag_symprec: float = -1.0,
     is_axial: bool | None = None,
     with_time_reversal: bool = True,
+    _throw: bool = False,
 ) -> dict[str, Any] | None:
     r"""Find magnetic symmetry operations from a crystal structure and site tensors.
 
@@ -726,7 +747,7 @@ def get_magnetic_symmetry(
     .. versionadded:: 2.0
 
     """
-    _set_no_error()
+    _set_no_error(_throw)
 
     lattice, positions, numbers, magmoms = _expand_cell(cell)
     if magmoms is None:
@@ -751,41 +772,40 @@ def get_magnetic_symmetry(
         elif magmoms.ndim == 2:
             is_axial = True  # Non-collinear spin
 
-    num_sym = _spglib.symmetry_with_site_tensors(
-        rotations,
-        translations,
-        equivalent_atoms,
-        primitive_lattice,
-        spin_flips,
-        lattice,
-        positions,
-        numbers,
-        magmoms,
-        with_time_reversal * 1,
-        is_axial * 1,
-        symprec,
-        angle_tolerance,
-        mag_symprec,
-    )
-
-    if num_sym == 0:
-        _set_error_message()
+    try:
+        num_sym = _spglib.symmetry_with_site_tensors(
+            rotations,
+            translations,
+            equivalent_atoms,
+            primitive_lattice,
+            spin_flips,
+            lattice,
+            positions,
+            numbers,
+            magmoms,
+            with_time_reversal * 1,
+            is_axial * 1,
+            symprec,
+            angle_tolerance,
+            mag_symprec,
+        )
+    except Exception as exc:
+        _set_or_throw_error(exc, _throw)
         return None
-    else:
-        spin_flips = np.array(spin_flips[:num_sym], dtype="intc", order="C")
-        # True for time reversal operation, False for ordinary operation
-        time_reversals = spin_flips == -1
-        return {
-            "rotations": np.array(rotations[:num_sym], dtype="intc", order="C"),
-            "translations": np.array(translations[:num_sym], dtype="double", order="C"),
-            "time_reversals": time_reversals,
-            "equivalent_atoms": equivalent_atoms,
-            "primitive_lattice": np.array(
-                np.transpose(primitive_lattice),
-                dtype="double",
-                order="C",
-            ),
-        }
+    spin_flips = np.array(spin_flips[:num_sym], dtype="intc", order="C")
+    # True for time reversal operation, False for ordinary operation
+    time_reversals = spin_flips == -1
+    return {
+        "rotations": np.array(rotations[:num_sym], dtype="intc", order="C"),
+        "translations": np.array(translations[:num_sym], dtype="double", order="C"),
+        "time_reversals": time_reversals,
+        "equivalent_atoms": equivalent_atoms,
+        "primitive_lattice": np.array(
+            np.transpose(primitive_lattice),
+            dtype="double",
+            order="C",
+        ),
+    }
 
 
 def get_symmetry_dataset(
@@ -793,6 +813,7 @@ def get_symmetry_dataset(
     symprec: float = 1e-5,
     angle_tolerance: float = -1.0,
     hall_number: int = 0,
+    _throw: bool = False,
 ) -> SpglibDataset | None:
     """Search symmetry dataset from an input cell.
 
@@ -829,20 +850,21 @@ def get_symmetry_dataset(
         More details are found at :ref:`spglib-dataset`.
 
     """
-    _set_no_error()
+    _set_no_error(_throw)
 
     lattice, positions, numbers, _ = _expand_cell(cell)
 
-    spg_ds = _spglib.dataset(
-        lattice,
-        positions,
-        numbers,
-        hall_number,
-        symprec,
-        angle_tolerance,
-    )
-    if spg_ds is None:
-        _set_error_message()
+    try:
+        spg_ds = _spglib.dataset(
+            lattice,
+            positions,
+            numbers,
+            hall_number,
+            symprec,
+            angle_tolerance,
+        )
+    except Exception as exc:
+        _set_or_throw_error(exc, _throw)
         return None
 
     return SpglibDataset(**spg_ds)
@@ -884,21 +906,21 @@ def get_magnetic_symmetry_dataset(
         elif tensor_rank == 1:
             is_axial = True  # Non-collinear spin
 
-    spg_ds = _spglib.magnetic_dataset(
-        lattice,
-        positions,
-        numbers,
-        magmoms,
-        tensor_rank,
-        is_axial,
-        symprec,
-        angle_tolerance,
-        mag_symprec,
-    )
-    if spg_ds is None:
-        _set_error_message()
+    try:
+        spg_ds = _spglib.magnetic_dataset(
+            lattice,
+            positions,
+            numbers,
+            magmoms,
+            tensor_rank,
+            is_axial,
+            symprec,
+            angle_tolerance,
+            mag_symprec,
+        )
+    except Exception as exc:
+        _set_or_throw_error(exc)
         return None
-
     return SpglibMagneticDataset(**spg_ds)
 
 
@@ -918,18 +940,21 @@ def get_spacegroup(
     """
     _set_no_error()
 
-    dataset = get_symmetry_dataset(
-        cell,
-        symprec=symprec,
-        angle_tolerance=angle_tolerance,
-    )
-
-    if dataset is None:
-        _set_error_message()
+    try:
+        dataset = get_symmetry_dataset(
+            cell,
+            symprec=symprec,
+            angle_tolerance=angle_tolerance,
+            _throw=True,
+        )
+    except Exception as exc:
+        _set_or_throw_error(exc)
         return None
 
-    spg_type = get_spacegroup_type(dataset.hall_number)
-    if spg_type is None:
+    try:
+        spg_type = get_spacegroup_type(dataset.hall_number, _throw=True)
+    except Exception as exc:
+        _set_or_throw_error(exc)
         return None
 
     if symbol_type == 1:
@@ -938,7 +963,9 @@ def get_spacegroup(
         return f"{spg_type.international_short} ({dataset.number})"
 
 
-def get_spacegroup_type(hall_number: int) -> SpaceGroupType | None:
+def get_spacegroup_type(
+    hall_number: int, _throw: bool = False
+) -> SpaceGroupType | None:
     """Translate Hall number to space group type information. If it fails, return None.
 
     This function allows to directly access to the space-group-type database
@@ -952,15 +979,14 @@ def get_spacegroup_type(hall_number: int) -> SpaceGroupType | None:
 
     .. versionadded:: 1.9.4
     """
-    _set_no_error()
+    _set_no_error(_throw)
 
-    spg_type = _spglib.spacegroup_type(hall_number)
-
-    if spg_type is not None:
-        return SpaceGroupType(**spg_type)
-    else:
-        _set_error_message()
+    try:
+        spg_type = _spglib.spacegroup_type(hall_number)
+    except Exception as exc:
+        _set_or_throw_error(exc, _throw)
         return None
+    return SpaceGroupType(**spg_type)
 
 
 def get_spacegroup_type_from_symmetry(
@@ -1014,12 +1040,12 @@ def get_spacegroup_type_from_symmetry(
 
     _set_no_error()
 
-    spg_type = _spglib.spacegroup_type_from_symmetry(r, t, _lattice, symprec)
-    if spg_type is not None:
-        return SpaceGroupType(**spg_type)
-    else:
-        _set_error_message()
+    try:
+        spg_type = _spglib.spacegroup_type_from_symmetry(r, t, _lattice, symprec)
+    except Exception as exc:
+        _set_or_throw_error(exc)
         return None
+    return SpaceGroupType(**spg_type)
 
 
 def get_magnetic_spacegroup_type(uni_number: int) -> MagneticSpaceGroupType | None:
@@ -1043,13 +1069,12 @@ def get_magnetic_spacegroup_type(uni_number: int) -> MagneticSpaceGroupType | No
     """
     _set_no_error()
 
-    msg_type = _spglib.magnetic_spacegroup_type(uni_number)
-
-    if msg_type is not None:
-        return MagneticSpaceGroupType(**msg_type)
-    else:
-        _set_error_message()
+    try:
+        msg_type = _spglib.magnetic_spacegroup_type(uni_number)
+    except Exception as exc:
+        _set_or_throw_error(exc)
         return None
+    return MagneticSpaceGroupType(**msg_type)
 
 
 def get_magnetic_spacegroup_type_from_symmetry(
@@ -1085,15 +1110,14 @@ def get_magnetic_spacegroup_type_from_symmetry(
         latt = np.array(lattice, dtype="double", order="C")
 
     _set_no_error()
-    msg_type = _spglib.magnetic_spacegroup_type_from_symmetry(
-        rots, trans, timerev, latt, symprec
-    )
-
-    if msg_type is not None:
-        return MagneticSpaceGroupType(**msg_type)
-    else:
-        _set_error_message()
+    try:
+        msg_type = _spglib.magnetic_spacegroup_type_from_symmetry(
+            rots, trans, timerev, latt, symprec
+        )
+    except Exception as exc:
+        _set_or_throw_error(exc)
         return None
+    return MagneticSpaceGroupType(**msg_type)
 
 
 def standardize_cell(
@@ -1141,26 +1165,25 @@ def standardize_cell(
     positions[:num_atom] = _positions
     numbers = np.zeros(num_atom * 4, dtype="intc")
     numbers[:num_atom] = _numbers
-    num_atom_std = _spglib.standardize_cell(
-        lattice,
-        positions,
-        numbers,
-        num_atom,
-        to_primitive * 1,
-        no_idealize * 1,
-        symprec,
-        angle_tolerance,
-    )
-
-    if num_atom_std > 0:
-        return (
-            np.array(lattice.T, dtype="double", order="C"),
-            np.array(positions[:num_atom_std], dtype="double", order="C"),
-            np.array(numbers[:num_atom_std], dtype="intc"),
+    try:
+        num_atom_std = _spglib.standardize_cell(
+            lattice,
+            positions,
+            numbers,
+            num_atom,
+            to_primitive * 1,
+            no_idealize * 1,
+            symprec,
+            angle_tolerance,
         )
-    else:
-        _set_error_message()
+    except Exception as exc:
+        _set_or_throw_error(exc)
         return None
+    return (
+        np.array(lattice.T, dtype="double", order="C"),
+        np.array(positions[:num_atom_std], dtype="double", order="C"),
+        np.array(numbers[:num_atom_std], dtype="intc"),
+    )
 
 
 def refine_cell(
@@ -1189,24 +1212,23 @@ def refine_cell(
     positions[:num_atom] = _positions
     numbers = np.zeros(num_atom * 4, dtype="intc")
     numbers[:num_atom] = _numbers
-    num_atom_std = _spglib.refine_cell(
-        lattice,
-        positions,
-        numbers,
-        num_atom,
-        symprec,
-        angle_tolerance,
-    )
-
-    if num_atom_std > 0:
-        return (
-            np.array(lattice.T, dtype="double", order="C"),
-            np.array(positions[:num_atom_std], dtype="double", order="C"),
-            np.array(numbers[:num_atom_std], dtype="intc"),
+    try:
+        num_atom_std = _spglib.refine_cell(
+            lattice,
+            positions,
+            numbers,
+            num_atom,
+            symprec,
+            angle_tolerance,
         )
-    else:
-        _set_error_message()
+    except Exception as exc:
+        _set_or_throw_error(exc)
         return None
+    return (
+        np.array(lattice.T, dtype="double", order="C"),
+        np.array(positions[:num_atom_std], dtype="double", order="C"),
+        np.array(numbers[:num_atom_std], dtype="intc"),
+    )
 
 
 def find_primitive(
@@ -1228,19 +1250,18 @@ def find_primitive(
 
     lattice, positions, numbers, _ = _expand_cell(cell)
 
-    num_atom_prim = _spglib.primitive(
-        lattice, positions, numbers, symprec, angle_tolerance
-    )
-
-    if num_atom_prim > 0:
-        return (
-            np.array(lattice.T, dtype="double", order="C"),
-            np.array(positions[:num_atom_prim], dtype="double", order="C"),
-            np.array(numbers[:num_atom_prim], dtype="intc"),
+    try:
+        num_atom_prim = _spglib.primitive(
+            lattice, positions, numbers, symprec, angle_tolerance
         )
-    else:
-        _set_error_message()
+    except Exception as exc:
+        _set_or_throw_error(exc)
         return None
+    return (
+        np.array(lattice.T, dtype="double", order="C"),
+        np.array(positions[:num_atom_prim], dtype="double", order="C"),
+        np.array(numbers[:num_atom_prim], dtype="intc"),
+    )
 
 
 def get_symmetry_from_database(hall_number: int) -> dict[str, Any] | None:
@@ -1266,16 +1287,15 @@ def get_symmetry_from_database(hall_number: int) -> dict[str, Any] | None:
 
     rotations = np.zeros((192, 3, 3), dtype="intc")
     translations = np.zeros((192, 3), dtype="double")
-    num_sym = _spglib.symmetry_from_database(rotations, translations, hall_number)
-
-    if num_sym is None:
-        _set_error_message()
+    try:
+        num_sym = _spglib.symmetry_from_database(rotations, translations, hall_number)
+    except Exception as exc:
+        _set_or_throw_error(exc)
         return None
-    else:
-        return {
-            "rotations": np.array(rotations[:num_sym], dtype="intc", order="C"),
-            "translations": np.array(translations[:num_sym], dtype="double", order="C"),
-        }
+    return {
+        "rotations": np.array(rotations[:num_sym], dtype="intc", order="C"),
+        "translations": np.array(translations[:num_sym], dtype="double", order="C"),
+    }
 
 
 def get_magnetic_symmetry_from_database(
@@ -1312,27 +1332,26 @@ def get_magnetic_symmetry_from_database(
     rotations = np.zeros((384, 3, 3), dtype="intc")
     translations = np.zeros((384, 3), dtype="double")
     time_reversals = np.zeros(384, dtype="intc")
-    num_sym = _spglib.magnetic_symmetry_from_database(
-        rotations,
-        translations,
-        time_reversals,
-        uni_number,
-        hall_number,
-    )
-
-    if num_sym is None:
-        _set_error_message()
+    try:
+        num_sym = _spglib.magnetic_symmetry_from_database(
+            rotations,
+            translations,
+            time_reversals,
+            uni_number,
+            hall_number,
+        )
+    except Exception as exc:
+        _set_or_throw_error(exc)
         return None
-    else:
-        return {
-            "rotations": np.array(rotations[:num_sym], dtype="intc", order="C"),
-            "translations": np.array(translations[:num_sym], dtype="double", order="C"),
-            "time_reversals": np.array(
-                time_reversals[:num_sym],
-                dtype="intc",
-                order="C",
-            ),
-        }
+    return {
+        "rotations": np.array(rotations[:num_sym], dtype="intc", order="C"),
+        "translations": np.array(translations[:num_sym], dtype="double", order="C"),
+        "time_reversals": np.array(
+            time_reversals[:num_sym],
+            dtype="intc",
+            order="C",
+        ),
+    }
 
 
 ############
@@ -1395,7 +1414,7 @@ def get_ir_reciprocal_mesh(
     grid_address = np.zeros((np.prod(mesh), 3), dtype="intc")
     if is_shift is None:
         is_shift = [0, 0, 0]
-    if (
+    try:
         _spglib.ir_reciprocal_mesh(
             grid_address,
             grid_mapping_table,
@@ -1407,12 +1426,10 @@ def get_ir_reciprocal_mesh(
             numbers,
             symprec,
         )
-        > 0
-    ):
-        return grid_mapping_table, grid_address
-    else:
-        _set_error_message()
+    except Exception as exc:
+        _set_or_throw_error(exc)
         return None
+    return grid_mapping_table, grid_address
 
 
 def delaunay_reduce(
@@ -1466,13 +1483,12 @@ def delaunay_reduce(
     _set_no_error()
 
     delaunay_lattice = np.array(np.transpose(lattice), dtype="double", order="C")
-    result = _spglib.delaunay_reduce(delaunay_lattice, float(eps))
-
-    if result == 0:
-        _set_error_message()
+    try:
+        _spglib.delaunay_reduce(delaunay_lattice, float(eps))
+    except Exception as exc:
+        _set_or_throw_error(exc)
         return None
-    else:
-        return np.array(np.transpose(delaunay_lattice), dtype="double", order="C")
+    return np.array(np.transpose(delaunay_lattice), dtype="double", order="C")
 
 
 def niggli_reduce(
@@ -1530,15 +1546,15 @@ def niggli_reduce(
     _set_no_error()
 
     niggli_lattice = np.array(np.transpose(lattice), dtype="double", order="C")
-    result = _spglib.niggli_reduce(niggli_lattice, float(eps))
-
-    if result == 0:
-        _set_error_message()
+    try:
+        _spglib.niggli_reduce(niggli_lattice, float(eps))
+    except Exception as exc:
+        _set_or_throw_error(exc)
         return None
-    else:
-        return np.array(np.transpose(niggli_lattice), dtype="double", order="C")
+    return np.array(np.transpose(niggli_lattice), dtype="double", order="C")
 
 
+@deprecated("Set OLD_ERROR_HANDLING to false and catch the errors directly")
 def get_error_message() -> str:
     """Return error message why spglib failed.
 
@@ -1549,6 +1565,7 @@ def get_error_message() -> str:
     Notes
     -----
     .. versionadded:: 1.9.5
+    .. deprecated:: 2.7.0
 
     """
     return spglib_error.message
@@ -1597,11 +1614,34 @@ def _expand_cell(
     return (lattice, positions, numbers, magmoms)
 
 
-def _set_error_message() -> None:
-    spglib_error.message = _spglib.error_message()
+def _check_OLD_ERROR_HANDLING() -> bool:
+    env_var = os.environ.get("SPGLIB_OLD_ERROR_HANLDING")
+    if env_var:
+        if env_var.lower() in ("false", "0"):
+            return False
+        return True
+    return Config.OLD_ERROR_HANDLING
 
 
-def _set_no_error() -> None:
+def _set_or_throw_error(exc: Exception, _throw: bool = False) -> None:
+    if _throw or not _check_OLD_ERROR_HANDLING():
+        raise exc
+    warnings.warn(
+        "Set OLD_ERROR_HANDLING to false and catch the errors directly.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    spglib_error.message = str(exc)
+
+
+def _set_no_error(_throw: bool = False) -> None:
+    if _throw or not _check_OLD_ERROR_HANDLING():
+        return
+    warnings.warn(
+        "Set OLD_ERROR_HANDLING to false and catch the errors directly.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     spglib_error.message = "no error"
 
 
@@ -1633,7 +1673,13 @@ def get_hall_number_from_symmetry(
     different from usual one, but is given in the fractional
     coordinates and so it should be small like ``1e-5``.
     """
+    _set_no_error()
+
     r = np.array(rotations, dtype="intc", order="C")
     t = np.array(translations, dtype="double", order="C")
-    hall_number = _spglib.hall_number_from_symmetry(r, t, symprec)
+    try:
+        hall_number = _spglib.hall_number_from_symmetry(r, t, symprec)
+    except Exception as exc:
+        _set_or_throw_error(exc)
+        return None
     return hall_number

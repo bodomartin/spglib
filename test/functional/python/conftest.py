@@ -20,6 +20,8 @@ if TYPE_CHECKING:
 
 TEST_DIR = Path(__file__).parent
 
+spglib.spglib.Config.OLD_ERROR_HANDLING = False
+
 
 def get_cell(fname: Path) -> TestCell:
     with fname.open() as f:
