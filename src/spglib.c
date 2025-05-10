@@ -211,7 +211,7 @@ SPG_API_TEST void spg_set_error_code(SpglibError err) {
     spglib_error_code = err;
 }
 
-char *spg_get_error_message(SpglibError error) {
+char const *spg_get_error_message(SpglibError error) {
     int i;
 
     for (i = 0; i < 100; i++) {

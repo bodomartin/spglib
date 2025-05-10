@@ -73,5 +73,4 @@ PYBIND11_MODULE(_spglib, module) {
     module.def("niggli_reduce", spglib::niggli_reduce, "");
     module.def("hall_number_from_symmetry", spglib::hall_number_from_symmetry,
                "");
-    module.def("error_message", spglib::error_message, "");
 }
