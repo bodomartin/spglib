@@ -47,23 +47,35 @@ PYBIND11_MODULE(_spglib, module) {
         py::overload_cast<array_int, array_int, array_int, array_int, py::int_,
                           array_double, array_double, array_int, py::float_>(
             spglib::ir_reciprocal_mesh),
-        "");
+        "", py::arg("grid_address"), py::arg("grid_mapping_table").noconvert(),
+        py::arg("mesh"), py::arg("is_shift"), py::arg("is_time_reversal"),
+        py::arg("lattice"), py::arg("positions"), py::arg("atom_types"),
+        py::arg("symprec"));
     module.def(
         "ir_reciprocal_mesh",
         py::overload_cast<array_int, array_size_t, array_int, array_int,
                           py::int_, array_double, array_double, array_int,
                           py::float_>(spglib::ir_reciprocal_mesh),
-        "");
+        "", py::arg("grid_address"), py::arg("grid_mapping_table").noconvert(),
+        py::arg("mesh"), py::arg("is_shift"), py::arg("is_time_reversal"),
+        py::arg("lattice"), py::arg("positions"), py::arg("atom_types"),
+        py::arg("symprec"));
     module.def("stabilized_reciprocal_mesh",
                py::overload_cast<array_int, array_int, array_int, array_int,
                                  py::int_, array_int, array_double>(
                    spglib::stabilized_reciprocal_mesh),
-               "");
+               "", py::arg("grid_address"),
+               py::arg("grid_mapping_table").noconvert(), py::arg("mesh"),
+               py::arg("is_shift"), py::arg("is_time_reversal"),
+               py::arg("rotations"), py::arg("qpoints"));
     module.def("stabilized_reciprocal_mesh",
                py::overload_cast<array_int, array_size_t, array_int, array_int,
                                  py::int_, array_int, array_double>(
                    spglib::stabilized_reciprocal_mesh),
-               "");
+               "", py::arg("grid_address"),
+               py::arg("grid_mapping_table").noconvert(), py::arg("mesh"),
+               py::arg("is_shift"), py::arg("is_time_reversal"),
+               py::arg("rotations"), py::arg("qpoints"));
     module.def("grid_points_by_rotations", spglib::grid_points_by_rotations,
                "");
     module.def("BZ_grid_points_by_rotations",
