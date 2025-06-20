@@ -57,7 +57,7 @@ TEST(SpacegroupTypeSearch, test_spg_get_spacegroup_type_from_symmetry) {
     int num_atom = 10;
 
     dataset = spg_get_dataset(lattice, position, types, num_atom, 1e-5);
-    EXPECT_NE(dataset, nullptr);
+    ASSERT_NE(dataset, nullptr);
     EXPECT_EQ(dataset->hall_number, 212);
 
     spg_type = spg_get_spacegroup_type_from_symmetry(
