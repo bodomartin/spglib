@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "spglib.h"
-#include "base.h"
 
 #include <stddef.h>
 #include <stdio.h>
@@ -11,6 +10,7 @@
 #include <string.h>
 
 #include "arithmetic.h"
+#include "base.h"
 #include "cell.h"
 #include "debug.h"
 #include "delaunay.h"
@@ -2333,9 +2333,10 @@ static int get_hall_number_from_symmetry(int const rotation[][3][3],
                                          double const symprec) {
     int i, hall_number;
     Symmetry *symmetry;
-    Symmetry *prim_symmetry;
+    Symmetry *prim_symmetry, *red_symmetry;
     Spacegroup *spacegroup;
-    double t_mat[3][3], t_mat_inv[3][3], prim_lat[3][3];
+    double t_mat[3][3], t_mat_inv[3][3], prim_lat[3][3], lat_inv[3][3],
+        red_lat[3][3];
 
     symmetry = NULL;
     prim_symmetry = NULL;
@@ -2350,6 +2351,9 @@ static int get_hall_number_from_symmetry(int const rotation[][3][3],
         mat_copy_vector_d3(symmetry->trans[i], translation[i]);
     }
 
+    // Get symmetry operations for a primitive lattice determined by pure
+    // translations in symmetry. Note: t_mat may not yield well-shaped primitive
+    // cell basis vectors.
     prim_symmetry = prm_get_primitive_symmetry(t_mat, symmetry, symprec);
     sym_free_symmetry(symmetry);
     symmetry = NULL;
@@ -2367,8 +2371,23 @@ static int get_hall_number_from_symmetry(int const rotation[][3][3],
         mat_copy_matrix_d3(prim_lat, lattice);
     }
 
+    // Niggli reduce the primitive cell, which is necessary for
+    // spa_search_spacegroup_with_symmetry.
+    mat_copy_matrix_d3(red_lat, prim_lat);
+    if (!spg_niggli_reduce(red_lat, symprec)) {
+        goto err;
+    }
+    if (!mat_inverse_matrix_d3(lat_inv, red_lat, symprec)) {
+        goto err;
+    }
+    mat_multiply_matrix_d3(t_mat, lat_inv, prim_lat);
+
+    red_symmetry = ref_get_primitive_symmetry(t_mat, prim_symmetry);
     spacegroup =
-        spa_search_spacegroup_with_symmetry(prim_symmetry, prim_lat, symprec);
+        spa_search_spacegroup_with_symmetry(red_symmetry, red_lat, symprec);
+
+    sym_free_symmetry(red_symmetry);
+    red_symmetry = NULL;
     sym_free_symmetry(prim_symmetry);
     prim_symmetry = NULL;
     if (spacegroup) {
