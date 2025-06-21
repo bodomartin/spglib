@@ -41,6 +41,7 @@ def test_spacegroup_type_from_symmetry(
 
 def test_spacegroup_type_from_symmetry_with_oblique_basis_vectors():
     """Test spacegroup_type_from_symmetry with oblique basis vectors."""
+    # Structure derived from 1509692 in the crystallography open database.
     lattice = [
         [0.0000, 6.4345, 1.8319],
         [5.245, -6.4345, 0.0000],
