@@ -1134,7 +1134,7 @@ def get_spacegroup_type_from_symmetry(
     lattice : array_like, optional
         Basis vectors a, b, c given in row vectors. Default is None, which gives
         unit matrix. This should be the same as that used to find ``rotations``
-        and ``translations`. If it is unknown, the cubic basis vector may be a
+        and ``translations``. If it is unknown, the cubic basis vector may be a
         possible choice unless the ``rotations`` and ``translations`` were
         obtained for an unusual (very oblique) choice of basis vectors.
         shape=(3, 3), order='C', dtype='double'
