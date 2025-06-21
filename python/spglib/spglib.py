@@ -1155,7 +1155,7 @@ def get_spacegroup_type_from_symmetry(
     if lattice is None:
         _lattice = np.eye(3, dtype="double", order="C")
     else:
-        _lattice = np.array(lattice, dtype="double", order="C")
+        _lattice = np.array(np.transpose(lattice), dtype="double", order="C")
 
     _set_no_error()
 
