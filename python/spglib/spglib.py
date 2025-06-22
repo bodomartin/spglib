@@ -1119,10 +1119,9 @@ def get_spacegroup_type_from_symmetry(
     """Return space-group type information from symmetry operations.
 
     This is expected to work well for the set of symmetry operations whose
-    distortion is small. The aim of making this feature is to find space-group-type
-    for the set of symmetry operations given by the other source than spglib. The
-    parameter ``lattice`` is used as the distance measure for ``symprec``. If this
-    is not given, the cubic basis vector whose lengths are one is used.
+    distortion is small. The aim of making this feature is to find
+    space-group-type for the set of symmetry operations given by the other
+    source than spglib.
 
     Parameters
     ----------
@@ -1133,8 +1132,11 @@ def get_spacegroup_type_from_symmetry(
         Vector parts of space group operations.
         shape=(n_operations, 3), order='C', dtype='double'
     lattice : array_like, optional
-        Basis vectors a, b, c given in row vectors. This is used as the measure of
-        distance. Default is None, which gives unit matrix.
+        Basis vectors a, b, c given in row vectors. Default is None, which gives
+        unit matrix. This should be the same as that used to find ``rotations``
+        and ``translations``. If it is unknown, the cubic basis vector may be a
+        possible choice unless the ``rotations`` and ``translations`` were
+        obtained for an unusual (very oblique) choice of basis vectors.
         shape=(3, 3), order='C', dtype='double'
     symprec: float
         See :func:`get_symmetry`.
