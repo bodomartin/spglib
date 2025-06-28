@@ -1,0 +1,14 @@
+root = true
+
+[*]
+indent_size = 4
+indent_style = space
+
+[*.{c,cpp,h}]
+max_line_length = 80
+
+[*.py]
+max_line_length = 88
+
+[*.yaml]
+indent_size = 2
