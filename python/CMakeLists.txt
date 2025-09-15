@@ -62,6 +62,8 @@ endif ()
 # Define main target
 set_target_properties(Spglib_python PROPERTIES
         OUTPUT_NAME _spglib
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/spglib
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/spglib
         INSTALL_RPATH "$<IF:$<BOOL:${APPLE}>,@loader_path,$ORIGIN>/${CMAKE_INSTALL_LIBDIR}"
 )
 target_sources(Spglib_python PRIVATE
@@ -83,12 +85,7 @@ endif ()
 # Copy all python packages to the build directory
 file(COPY spglib
         DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/)
-# Link the built library to the package in the binary directory
-add_custom_command(TARGET Spglib_python POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E create_symlink
-        $<TARGET_FILE:Spglib_python>
-        ${CMAKE_CURRENT_BINARY_DIR}/spglib/$<TARGET_FILE_NAME:Spglib_python>
-)
+
 # On Windows make sure the dll files are in the build directory
 # https://stackoverflow.com/a/73550650
 if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.26)
