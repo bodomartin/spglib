@@ -8,7 +8,7 @@ from __future__ import annotations
 import dataclasses
 import warnings
 from collections.abc import Mapping, Sequence
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Union, cast
 
 import numpy as np
 
@@ -67,9 +67,13 @@ Lattice: TypeAlias = Sequence[Sequence[float]]
 Positions: TypeAlias = Sequence[Sequence[float]]
 Numbers: TypeAlias = Sequence[int]
 Magmoms: TypeAlias = Union[Sequence[float], Sequence[Sequence[float]]]
-Cell: TypeAlias = Union[
-    tuple[Lattice, Positions, Numbers], tuple[Lattice, Positions, Numbers, Magmoms]
-]
+SpgCell: TypeAlias = tuple[Lattice, Positions, Numbers]
+"""Crystal structure represented by a tuple of (lattice, positions, numbers)."""
+MsgCell: TypeAlias = tuple[Lattice, Positions, Numbers, Magmoms]
+"""Magnetic crystal structure represented by a tuple of
+(lattice, positions, numbers, magmoms)."""
+Cell: TypeAlias = Union[SpgCell, MsgCell]
+"""Either SpgCell or MsgCell."""
 
 
 class SpglibError:
@@ -599,7 +603,7 @@ def get_symmetry(
     if magmoms is None:
         # Get symmetry operations without on-site tensors (i.e. normal crystal)
         dataset = get_symmetry_dataset(
-            cell,
+            cast(SpgCell, cell),
             symprec=symprec,
             angle_tolerance=angle_tolerance,
         )
@@ -619,7 +623,7 @@ def get_symmetry(
             stacklevel=1,
         )
         return get_magnetic_symmetry(
-            cell,
+            cast(MsgCell, cell),
             symprec=symprec,
             angle_tolerance=angle_tolerance,
             mag_symprec=mag_symprec,
@@ -629,7 +633,7 @@ def get_symmetry(
 
 
 def get_magnetic_symmetry(
-    cell: Cell,
+    cell: MsgCell,
     symprec: float = 1e-5,
     angle_tolerance: float = -1.0,
     mag_symprec: float = -1.0,
@@ -846,7 +850,7 @@ def _build_dataset_dict(spg_ds: list[Any]) -> SpglibDataset:
 
 
 def get_symmetry_dataset(
-    cell: Cell,
+    cell: SpgCell,
     symprec: float = 1e-5,
     angle_tolerance: float = -1.0,
     hall_number: int = 0,
@@ -907,7 +911,7 @@ def get_symmetry_dataset(
 
 
 def get_symmetry_layerdataset(
-    cell: Cell, aperiodic_dir: int = 2, symprec: float = 1e-5
+    cell: SpgCell, aperiodic_dir: int = 2, symprec: float = 1e-5
 ) -> SpglibDataset | None:
     """TODO: Add comments."""
     _set_no_error()
@@ -931,7 +935,7 @@ def get_symmetry_layerdataset(
 
 
 def get_magnetic_symmetry_dataset(
-    cell: Cell,
+    cell: MsgCell,
     is_axial: bool | None = None,
     symprec: float = 1e-5,
     angle_tolerance: float = -1.0,
@@ -1018,7 +1022,7 @@ def get_magnetic_symmetry_dataset(
 
 
 def get_layergroup(
-    cell: Cell, aperiodic_dir: int = 2, symprec: float = 1e-5
+    cell: SpgCell, aperiodic_dir: int = 2, symprec: float = 1e-5
 ) -> SpglibDataset | None:
     """Return layer group in ....
 
@@ -1036,7 +1040,7 @@ def get_layergroup(
 
 
 def get_spacegroup(
-    cell: Cell,
+    cell: SpgCell,
     symprec: float = 1e-5,
     angle_tolerance: float = -1.0,
     symbol_type: int = 0,
@@ -1320,12 +1324,12 @@ def get_pointgroup(rotations: ArrayLike[np.intc]) -> tuple[str, int, np.ndarray]
 
 
 def standardize_cell(
-    cell: Cell,
+    cell: SpgCell,
     to_primitive: bool = False,
     no_idealize: bool = False,
     symprec: float = 1e-5,
     angle_tolerance: float = -1.0,
-) -> Cell | None:
+) -> SpgCell | None:
     """Return standardized cell. When the search failed, ``None`` is returned.
 
     Parameters
@@ -1387,8 +1391,8 @@ def standardize_cell(
 
 
 def refine_cell(
-    cell: Cell, symprec: float = 1e-5, angle_tolerance: float = -1.0
-) -> Cell | None:
+    cell: SpgCell, symprec: float = 1e-5, angle_tolerance: float = -1.0
+) -> SpgCell | None:
     """Return refined cell. When the search failed, ``None`` is returned.
 
     The standardized unit cell is returned by a tuple of
@@ -1433,8 +1437,8 @@ def refine_cell(
 
 
 def find_primitive(
-    cell: Cell, symprec: float = 1e-5, angle_tolerance: float = -1.0
-) -> Cell | None:
+    cell: SpgCell, symprec: float = 1e-5, angle_tolerance: float = -1.0
+) -> SpgCell | None:
     """Primitive cell is searched in the input cell. If it fails, ``None`` is returned.
 
     The primitive cell is returned by a tuple of (lattice, positions, numbers).
