@@ -11,6 +11,14 @@ GitHub release pages and in the git history.
 
 ## [Unreleased]
 
+## Main changes
+
+- [[#610]](https://github.com/spglib/spglib/pull/610) Try to preserve the
+  Bravais lattice orientation with respect to the input one in magnetic space
+  group when there are symmetrically equivalent candidates. By this
+  `transformation_matrix`, `origin_shift`, `std_*` in `SpglibMagneticDataset`
+  can be chosen differently.
+
 ### Python API
 
 - Switched to using pybind11 for generating the python bindings
