@@ -13,6 +13,9 @@ GitHub release pages and in the git history.
 
 ## Main changes
 
+- [[#612]](https://github.com/spglib/spglib/pull/612) Improve implementation of
+  #610.
+
 - [[#610]](https://github.com/spglib/spglib/pull/610) Try to preserve the
   Bravais lattice orientation with respect to the input one in magnetic space
   group when there are symmetrically equivalent candidates. By this
