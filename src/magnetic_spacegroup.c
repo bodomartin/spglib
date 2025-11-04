@@ -71,7 +71,6 @@ MagneticDataset *msg_identify_magnetic_space_group_type(
     double rigid_rot[3][3];
     double tmat[3][3], tmat_cor[3][3];
     double shift[3], shift_cor[3];
-    double blat_orig[3][3], blat_inv[3][3], blat_rot[3][3];
 
     transformations = NULL;
     ref_sg = NULL;
@@ -171,13 +170,6 @@ MagneticDataset *msg_identify_magnetic_space_group_type(
 
     mat_multiply_matrix_d3(ref_sg->bravais_lattice, lattice,
                            ref_sg->bravais_lattice);
-
-    /* Find more intuitive orientation of Bravais lattice*/
-    mat_copy_matrix_d3(blat_orig, ref_sg->bravais_lattice);
-    ref_find_similar_bravais_lattice(ref_sg, symprec);
-    mat_inverse_matrix_d3(blat_inv, ref_sg->bravais_lattice, 0);
-    mat_multiply_matrix_d3(blat_rot, blat_inv, blat_orig);
-    mat_multiply_matrix_d3(tmat, blat_rot, tmat);
 
     /* Rigid rotation to standardized lattice */
     get_rigid_rotation(rigid_rot, lattice, tmat, ref_sg);
@@ -431,8 +423,10 @@ static int get_reference_space_group(Spacegroup **ref_sg,
     /* For other types, use setting from Hall symbol of FSG. */
     if ((*ref_sg = (Spacegroup *)malloc(sizeof(Spacegroup))) == NULL) goto err;
     if (type == 4) {
+        ref_find_similar_bravais_lattice(xsg, symprec);
         spa_copy_spacegroup(*ref_sg, xsg);
     } else {
+        ref_find_similar_bravais_lattice(fsg, symprec);
         spa_copy_spacegroup(*ref_sg, fsg);
     }
     mat_inverse_matrix_d3(tmat, (*ref_sg)->bravais_lattice, 0);
