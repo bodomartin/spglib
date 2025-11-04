@@ -18,6 +18,7 @@
 static int get_reference_space_group(Spacegroup **ref_sg,
                                      MagneticSymmetry **changed_symmetry,
                                      double tmat[3][3], double shift[3],
+                                     double const lattice[3][3],
                                      MagneticSymmetry const *magnetic_symmetry,
                                      double const symprec);
 static Symmetry *get_family_space_group_with_magnetic_symmetry(
@@ -82,7 +83,7 @@ MagneticDataset *msg_identify_magnetic_space_group_type(
     /* TODO(shinohara): add option to specify hall_number in searching
      * space-group type */
     type = get_reference_space_group(&ref_sg, &changed_symmetry, tmat, shift,
-                                     magnetic_symmetry, symprec);
+                                     lattice, magnetic_symmetry, symprec);
     if (type == 0) goto err;
     hall_number = ref_sg->hall_number;
 
@@ -385,12 +386,14 @@ err:
 static int get_reference_space_group(Spacegroup **ref_sg,
                                      MagneticSymmetry **changed_symmetry,
                                      double tmat[3][3], double shift[3],
+                                     double const lattice[3][3],
                                      MagneticSymmetry const *magnetic_symmetry,
                                      double const symprec) {
     int type;
     Symmetry *sym_fsg, *sym_xsg;
     Spacegroup *fsg, *xsg;
     MagneticSymmetry *representatives;
+    double lattice_inv[3][3];
 
     sym_fsg = NULL;
     sym_xsg = NULL;
@@ -423,12 +426,16 @@ static int get_reference_space_group(Spacegroup **ref_sg,
     /* For other types, use setting from Hall symbol of FSG. */
     if ((*ref_sg = (Spacegroup *)malloc(sizeof(Spacegroup))) == NULL) goto err;
     if (type == 4) {
-        ref_find_similar_bravais_lattice(xsg, symprec);
         spa_copy_spacegroup(*ref_sg, xsg);
     } else {
-        ref_find_similar_bravais_lattice(fsg, symprec);
         spa_copy_spacegroup(*ref_sg, fsg);
     }
+    mat_inverse_matrix_d3(lattice_inv, lattice, 0);
+    mat_multiply_matrix_d3((*ref_sg)->bravais_lattice, lattice,
+                           (*ref_sg)->bravais_lattice);
+    ref_find_similar_bravais_lattice(*ref_sg, symprec);
+    mat_multiply_matrix_d3((*ref_sg)->bravais_lattice, lattice_inv,
+                           (*ref_sg)->bravais_lattice);
     mat_inverse_matrix_d3(tmat, (*ref_sg)->bravais_lattice, 0);
     mat_copy_vector_d3(shift, (*ref_sg)->origin_shift);
 
