@@ -51,7 +51,6 @@ __all__ = [
     "spg_get_version",
     "spg_get_version_full",
     "standardize_cell",
-    "Config",
 ]
 
 warnings.filterwarnings(
@@ -71,16 +70,13 @@ Cell: TypeAlias = Union[SpgCell, MsgCell]
 """Either SpgCell or MsgCell."""
 
 
-class Config:
-    """Container for Spglib configurations."""
+OLD_ERROR_HANDLING: bool = True
+"""
+Use the old error handling.
 
-    OLD_ERROR_HANDLING: bool = True
-    """
-    Use the old error handling.
-
-    Note that this variable may be removed in the future or change value in the future.
-    You can also use :envvar:`SPGLIB_OLD_ERROR_HANDLING` instead of altering this value.
-    """
+Note that this variable may be removed in the future or change value in the future.
+You can also use :envvar:`SPGLIB_OLD_ERROR_HANDLING` instead of altering this value.
+"""
 
 
 class SpglibError:
@@ -1616,11 +1612,11 @@ def _expand_cell(
 
 def _check_OLD_ERROR_HANDLING() -> bool:
     env_var = os.environ.get("SPGLIB_OLD_ERROR_HANLDING")
-    if env_var:
+    if env_var is not None:
         if env_var.lower() in ("false", "0"):
             return False
         return True
-    return Config.OLD_ERROR_HANDLING
+    return OLD_ERROR_HANDLING
 
 
 def _set_or_throw_error(exc: Exception, _throw: bool = False) -> None:

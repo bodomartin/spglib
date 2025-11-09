@@ -10,7 +10,6 @@ from ._version import __version__, __version_tuple__  # noqa: F401
 
 # fmt: off
 from .spglib import (  # noqa: F401
-    Config,
     MagneticSpaceGroupType,
     SpaceGroupType,
     SpglibDataset,
