@@ -93,8 +93,8 @@ def get_symmetry_layerdataset(
             lattice,
             positions,
             numbers,
-            aperiodic_dir,
-            symprec,
+            int(aperiodic_dir),
+            float(symprec),
         )
     except Exception as exc:
         _set_or_throw_error(exc, _throw)
@@ -210,7 +210,7 @@ def get_stabilized_reciprocal_mesh(
             mapping_table,
             np.array(mesh, dtype="intc"),
             np.array(is_shift, dtype="intc"),
-            is_time_reversal * 1,
+            int(is_time_reversal * 1),
             np.array(rotations, dtype="intc", order="C"),
             qpoints,
         )

@@ -779,11 +779,11 @@ def get_magnetic_symmetry(
             positions,
             numbers,
             magmoms,
-            with_time_reversal * 1,
-            is_axial * 1,
-            symprec,
-            angle_tolerance,
-            mag_symprec,
+            int(with_time_reversal * 1),
+            int(is_axial * 1),
+            float(symprec),
+            float(angle_tolerance),
+            float(mag_symprec),
         )
     except Exception as exc:
         _set_or_throw_error(exc, _throw)
@@ -855,9 +855,9 @@ def get_symmetry_dataset(
             lattice,
             positions,
             numbers,
-            hall_number,
-            symprec,
-            angle_tolerance,
+            int(hall_number),
+            float(symprec),
+            float(angle_tolerance),
         )
     except Exception as exc:
         _set_or_throw_error(exc, _throw)
@@ -908,11 +908,11 @@ def get_magnetic_symmetry_dataset(
             positions,
             numbers,
             magmoms,
-            tensor_rank,
+            int(tensor_rank),
             is_axial,
-            symprec,
-            angle_tolerance,
-            mag_symprec,
+            float(symprec),
+            float(angle_tolerance),
+            float(mag_symprec),
         )
     except Exception as exc:
         _set_or_throw_error(exc)
@@ -978,7 +978,7 @@ def get_spacegroup_type(
     _set_no_error(_throw)
 
     try:
-        spg_type = _spglib.spacegroup_type(hall_number)
+        spg_type = _spglib.spacegroup_type(int(hall_number))
     except Exception as exc:
         _set_or_throw_error(exc, _throw)
         return None
@@ -1037,7 +1037,7 @@ def get_spacegroup_type_from_symmetry(
     _set_no_error()
 
     try:
-        spg_type = _spglib.spacegroup_type_from_symmetry(r, t, _lattice, symprec)
+        spg_type = _spglib.spacegroup_type_from_symmetry(r, t, _lattice, float(symprec))
     except Exception as exc:
         _set_or_throw_error(exc)
         return None
@@ -1066,7 +1066,7 @@ def get_magnetic_spacegroup_type(uni_number: int) -> MagneticSpaceGroupType | No
     _set_no_error()
 
     try:
-        msg_type = _spglib.magnetic_spacegroup_type(uni_number)
+        msg_type = _spglib.magnetic_spacegroup_type(int(uni_number))
     except Exception as exc:
         _set_or_throw_error(exc)
         return None
@@ -1108,7 +1108,7 @@ def get_magnetic_spacegroup_type_from_symmetry(
     _set_no_error()
     try:
         msg_type = _spglib.magnetic_spacegroup_type_from_symmetry(
-            rots, trans, timerev, latt, symprec
+            rots, trans, timerev, latt, float(symprec)
         )
     except Exception as exc:
         _set_or_throw_error(exc)
@@ -1167,10 +1167,10 @@ def standardize_cell(
             positions,
             numbers,
             num_atom,
-            to_primitive * 1,
-            no_idealize * 1,
-            symprec,
-            angle_tolerance,
+            int(to_primitive * 1),
+            int(no_idealize * 1),
+            float(symprec),
+            float(angle_tolerance),
         )
     except Exception as exc:
         _set_or_throw_error(exc)
@@ -1214,8 +1214,8 @@ def refine_cell(
             positions,
             numbers,
             num_atom,
-            symprec,
-            angle_tolerance,
+            float(symprec),
+            float(angle_tolerance),
         )
     except Exception as exc:
         _set_or_throw_error(exc)
@@ -1248,7 +1248,7 @@ def find_primitive(
 
     try:
         num_atom_prim = _spglib.primitive(
-            lattice, positions, numbers, symprec, angle_tolerance
+            lattice, positions, numbers, float(symprec), float(angle_tolerance)
         )
     except Exception as exc:
         _set_or_throw_error(exc)
@@ -1284,7 +1284,11 @@ def get_symmetry_from_database(hall_number: int) -> dict[str, Any] | None:
     rotations = np.zeros((192, 3, 3), dtype="intc")
     translations = np.zeros((192, 3), dtype="double")
     try:
-        num_sym = _spglib.symmetry_from_database(rotations, translations, hall_number)
+        num_sym = _spglib.symmetry_from_database(
+            rotations,
+            translations,
+            int(hall_number),
+        )
     except Exception as exc:
         _set_or_throw_error(exc)
         return None
@@ -1333,8 +1337,8 @@ def get_magnetic_symmetry_from_database(
             rotations,
             translations,
             time_reversals,
-            uni_number,
-            hall_number,
+            int(uni_number),
+            int(hall_number),
         )
     except Exception as exc:
         _set_or_throw_error(exc)
@@ -1416,11 +1420,11 @@ def get_ir_reciprocal_mesh(
             grid_mapping_table,
             np.array(mesh, dtype="intc"),
             np.array(is_shift, dtype="intc"),
-            is_time_reversal * 1,
+            int(is_time_reversal * 1),
             lattice,
             positions,
             numbers,
-            symprec,
+            float(symprec),
         )
     except Exception as exc:
         _set_or_throw_error(exc)
@@ -1674,7 +1678,7 @@ def get_hall_number_from_symmetry(
     r = np.array(rotations, dtype="intc", order="C")
     t = np.array(translations, dtype="double", order="C")
     try:
-        hall_number = _spglib.hall_number_from_symmetry(r, t, symprec)
+        hall_number = _spglib.hall_number_from_symmetry(r, t, float(symprec))
     except Exception as exc:
         _set_or_throw_error(exc)
         return None
