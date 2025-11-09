@@ -77,6 +77,17 @@ class AtomTypes {
     int const* data() const;
 };
 
+class Magmoms {
+    array_double array;
+
+   public:
+    int const n_atoms;
+    explicit Magmoms(array_double&& _array);
+    double* data();
+    [[nodiscard]]
+    double const* data() const;
+};
+
 class Atoms {
    public:
     Positions const positions;
@@ -96,7 +107,7 @@ py::dict layer_dataset(Lattice const& lattice, Positions const& positions,
                        AtomTypes const& atom_types, py::int_ aperiodic_dir,
                        py::float_ symprec);
 py::dict magnetic_dataset(Lattice const& lattice, Positions const& positions,
-                          AtomTypes const& atom_types, array_double magmoms,
+                          AtomTypes const& atom_types, Magmoms const& magmoms,
                           py::int_ tensor_rank, py::bool_ is_axial,
                           py::float_ symprec, py::float_ angle_tolerance,
                           py::float_ mag_symprec);
@@ -132,7 +143,7 @@ py::int_ symmetry(Rotations& rotations, Translations& translations,
 py::int_ symmetry_with_collinear_spin(
     Rotations& rotations, Translations& translations, array_int equiv_atoms,
     Lattice const& lattice, Positions const& positions,
-    AtomTypes const& atom_types, array_double magmoms, py::float_ symprec,
+    AtomTypes const& atom_types, Magmoms const& magmoms, py::float_ symprec,
     py::float_ angle_tolerance);
 py::int_ symmetry_with_site_tensors(
     Rotations& rotations, Translations& translations, array_int equiv_atoms,

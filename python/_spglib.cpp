@@ -29,6 +29,8 @@ PYBIND11_MODULE(_spglib, module) {
     py::implicitly_convertible<array_double, Positions>();
     py::class_<AtomTypes>(module, "AtomTypes").def(py::init<array_int>());
     py::implicitly_convertible<array_int, AtomTypes>();
+    py::class_<Magmoms>(module, "Magmoms").def(py::init<array_double>());
+    py::implicitly_convertible<array_double, Magmoms>();
     py::class_<Atoms>(module, "Atoms").def(py::init<Positions, AtomTypes>());
 
     module.def("version_tuple", spglib::version_tuple, "");
