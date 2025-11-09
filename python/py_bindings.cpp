@@ -382,7 +382,7 @@ py::dict spglib::layer_dataset(Lattice const& lattice,
 py::dict spglib::magnetic_dataset(Lattice const& lattice,
                                   Positions const& positions,
                                   AtomTypes const& atom_types,
-                                  Magmoms const& magmoms, py::int_ tensor_rank,
+                                  array_double magmoms, py::int_ tensor_rank,
                                   py::bool_ is_axial, py::float_ symprec,
                                   py::float_ angle_tolerance,
                                   py::float_ mag_symprec) {
@@ -494,7 +494,7 @@ py::int_ spglib::symmetry(Rotations& rotations, Translations& translations,
 py::int_ spglib::symmetry_with_collinear_spin(
     Rotations& rotations, Translations& translations, array_int equiv_atoms,
     Lattice const& lattice, Positions const& positions,
-    AtomTypes const& atom_types, Magmoms const& magmoms, py::float_ symprec,
+    AtomTypes const& atom_types, array_double magmoms, py::float_ symprec,
     py::float_ angle_tolerance) {
     return spgat_get_symmetry_with_collinear_spin(
         rotations.data(), translations.data(), equiv_atoms.mutable_data(),
