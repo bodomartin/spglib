@@ -23,7 +23,7 @@ class Lattice {
     array_double array;
 
    public:
-    explicit Lattice(array_double&& _array);
+    explicit Lattice(array_double &&_array);
     double (*data())[3];
     [[nodiscard]] double const (*data() const)[3];
 };
@@ -33,7 +33,7 @@ class Rotations {
 
    public:
     int const n_operations;
-    explicit Rotations(array_int&& _array);
+    explicit Rotations(array_int &&_array);
     int (*data())[3][3];
     [[nodiscard]] int const (*data() const)[3][3];
 };
@@ -43,7 +43,7 @@ class Translations {
 
    public:
     int const n_operations;
-    explicit Translations(array_double&& _array);
+    explicit Translations(array_double &&_array);
     double (*data())[3];
     [[nodiscard]] double const (*data() const)[3];
 };
@@ -53,7 +53,7 @@ class Symmetries {
     Rotations const rotations;
     Translations const translations;
     int const n_operations;
-    Symmetries(Rotations&& _rotations, Translations&& _translations);
+    Symmetries(Rotations &&_rotations, Translations &&_translations);
 };
 
 class Positions {
@@ -61,7 +61,7 @@ class Positions {
 
    public:
     int const n_atoms;
-    explicit Positions(array_double&& _array);
+    explicit Positions(array_double &&_array);
     double (*data())[3];
     [[nodiscard]] double const (*data() const)[3];
 };
@@ -71,10 +71,10 @@ class AtomTypes {
 
    public:
     int const n_atoms;
-    explicit AtomTypes(array_int&& _array);
-    int* data();
+    explicit AtomTypes(array_int &&_array);
+    int *data();
     [[nodiscard]]
-    int const* data() const;
+    int const *data() const;
 };
 
 class Magmoms {
@@ -82,10 +82,10 @@ class Magmoms {
 
    public:
     int const n_atoms;
-    explicit Magmoms(array_double&& _array);
-    double* data();
+    explicit Magmoms(array_double &&_array);
+    double *data();
     [[nodiscard]]
-    double const* data() const;
+    double const *data() const;
 };
 
 class Atoms {
@@ -93,105 +93,105 @@ class Atoms {
     Positions const positions;
     AtomTypes const types;
     int const n_atoms;
-    Atoms(Positions&& _positions, AtomTypes&& _types);
+    Atoms(Positions &&_positions, AtomTypes &&_types);
 };
 
 py::tuple version_tuple();
 py::str version_string();
 py::str version_full();
 py::str commit();
-py::dict dataset(Lattice const& lattice, Positions const& positions,
-                 AtomTypes const& atom_types, py::int_ hall_number,
+py::dict dataset(Lattice const &lattice, Positions const &positions,
+                 AtomTypes const &atom_types, py::int_ hall_number,
                  py::float_ symprec, py::float_ angle_tolerance);
-py::dict layer_dataset(Lattice const& lattice, Positions const& positions,
-                       AtomTypes const& atom_types, py::int_ aperiodic_dir,
+py::dict layer_dataset(Lattice const &lattice, Positions const &positions,
+                       AtomTypes const &atom_types, py::int_ aperiodic_dir,
                        py::float_ symprec);
-py::dict magnetic_dataset(Lattice const& lattice, Positions const& positions,
-                          AtomTypes const& atom_types, array_double magmoms,
+py::dict magnetic_dataset(Lattice const &lattice, Positions const &positions,
+                          AtomTypes const &atom_types, array_double magmoms,
                           py::int_ tensor_rank, py::bool_ is_axial,
                           py::float_ symprec, py::float_ angle_tolerance,
                           py::float_ mag_symprec);
 py::dict spacegroup_type(py::int_ hall_number);
-py::dict spacegroup_type_from_symmetry(Rotations const& rotations,
-                                       Translations const& translations,
-                                       Lattice const& lattice,
+py::dict spacegroup_type_from_symmetry(Rotations const &rotations,
+                                       Translations const &translations,
+                                       Lattice const &lattice,
                                        py::float_ symprec);
 py::dict magnetic_spacegroup_type(py::int_ uni_number);
 py::dict magnetic_spacegroup_type_from_symmetry(
-    Rotations const& rotations, Translations const& translations,
-    array_int time_reversals, Lattice const& lattice, py::float_ symprec);
-py::int_ symmetry_from_database(Rotations& rotations,
-                                Translations& translations,
+    Rotations const &rotations, Translations const &translations,
+    array_int time_reversals, Lattice const &lattice, py::float_ symprec);
+py::int_ symmetry_from_database(Rotations &rotations,
+                                Translations &translations,
                                 py::int_ hall_number);
-py::int_ magnetic_symmetry_from_database(Rotations& rotations,
-                                         Translations& translations,
+py::int_ magnetic_symmetry_from_database(Rotations &rotations,
+                                         Translations &translations,
                                          array_int time_reversals,
                                          py::int_ uni_number,
                                          py::int_ hall_number);
 py::tuple pointgroup(array_int rotations);
-py::int_ standardize_cell(Lattice& lattice, Positions& positions,
+py::int_ standardize_cell(Lattice &lattice, Positions &positions,
                           array_int atom_types, py::int_ num_atom,
                           py::int_ to_primative, py::int_ no_idealize,
                           py::float_ symprec, py::float_ angle_tolerance);
-py::int_ refine_cell(Lattice& lattice, Positions& positions,
-                     AtomTypes& atom_types, py::int_ num_atom,
+py::int_ refine_cell(Lattice &lattice, Positions &positions,
+                     AtomTypes &atom_types, py::int_ num_atom,
                      py::float_ symprec, py::float_ angle_tolerance);
-py::int_ symmetry(Rotations& rotations, Translations& translations,
-                  Lattice const& lattice, Positions const& positions,
-                  AtomTypes const& atom_types, py::float_ symprec,
+py::int_ symmetry(Rotations &rotations, Translations &translations,
+                  Lattice const &lattice, Positions const &positions,
+                  AtomTypes const &atom_types, py::float_ symprec,
                   py::float_ angle_tolerance);
 py::int_ symmetry_with_collinear_spin(
-    Rotations& rotations, Translations& translations, array_int equiv_atoms,
-    Lattice const& lattice, Positions const& positions,
-    AtomTypes const& atom_types, array_double magmoms, py::float_ symprec,
+    Rotations &rotations, Translations &translations, array_int equiv_atoms,
+    Lattice const &lattice, Positions const &positions,
+    AtomTypes const &atom_types, array_double magmoms, py::float_ symprec,
     py::float_ angle_tolerance);
 py::int_ symmetry_with_site_tensors(
-    Rotations& rotations, Translations& translations, array_int equiv_atoms,
-    Lattice& primitive_lattice, array_int spin_flips, Lattice const& lattice,
-    Positions const& positions, AtomTypes const& atom_types,
+    Rotations &rotations, Translations &translations, array_int equiv_atoms,
+    Lattice &primitive_lattice, array_int spin_flips, Lattice const &lattice,
+    Positions const &positions, AtomTypes const &atom_types,
     array_double tensors, py::int_ with_time_reversal, py::int_ is_axial,
     py::float_ symprec, py::float_ angle_tolerance, py::float_ mag_symprec);
-py::int_ primitive(Lattice& lattice, Positions& positions,
-                   AtomTypes& atom_types, py::float_ symprec,
+py::int_ primitive(Lattice &lattice, Positions &positions,
+                   AtomTypes &atom_types, py::float_ symprec,
                    py::float_ angle_tolerance);
 py::int_ grid_point_from_address(array_int grid_address, array_int mesh);
 py::int_ ir_reciprocal_mesh(array_int grid_address,
                             array_int grid_mapping_table, array_int mesh,
                             array_int is_shift, py::int_ is_time_reversal,
-                            Lattice const& lattice, Positions const& positions,
-                            AtomTypes const& atom_types, py::float_ symprec);
+                            Lattice const &lattice, Positions const &positions,
+                            AtomTypes const &atom_types, py::float_ symprec);
 py::int_ ir_reciprocal_mesh(array_int grid_address,
                             array_size_t grid_mapping_table, array_int mesh,
                             array_int is_shift, py::int_ is_time_reversal,
-                            Lattice const& lattice, Positions const& positions,
-                            AtomTypes const& atom_types, py::float_ symprec);
+                            Lattice const &lattice, Positions const &positions,
+                            AtomTypes const &atom_types, py::float_ symprec);
 py::int_ stabilized_reciprocal_mesh(array_int grid_address,
                                     array_int grid_mapping_table,
                                     array_int mesh, array_int is_shift,
                                     py::int_ is_time_reversal,
-                                    Rotations const& rotations,
+                                    Rotations const &rotations,
                                     array_double qpoints);
 py::int_ stabilized_reciprocal_mesh(array_int grid_address,
                                     array_size_t grid_mapping_table,
                                     array_int mesh, array_int is_shift,
                                     py::int_ is_time_reversal,
-                                    Rotations const& rotations,
+                                    Rotations const &rotations,
                                     array_double qpoints);
 void grid_points_by_rotations(array_size_t rot_grid_points,
                               array_int address_orig,
-                              Rotations const& rot_reciprocal, array_int mesh,
+                              Rotations const &rot_reciprocal, array_int mesh,
                               array_int is_shift);
 void BZ_grid_points_by_rotations(array_size_t rot_grid_points,
                                  array_int address_orig,
-                                 Rotations const& rot_reciprocal,
+                                 Rotations const &rot_reciprocal,
                                  array_int mesh, array_int is_shift,
                                  array_size_t bz_map);
 py::int_ BZ_grid_address(array_int bz_grid_address, array_size_t bz_map,
                          array_int grid_address, array_int mesh,
-                         Lattice const& reciprocal_lattice, array_int is_shift);
-py::int_ delaunay_reduce(Lattice& lattice, py::float_ symprec);
-py::int_ niggli_reduce(Lattice& lattice, py::float_ eps);
-py::int_ hall_number_from_symmetry(Rotations const& rotations,
-                                   Translations const& translations,
+                         Lattice const &reciprocal_lattice, array_int is_shift);
+py::int_ delaunay_reduce(Lattice &lattice, py::float_ symprec);
+py::int_ niggli_reduce(Lattice &lattice, py::float_ eps);
+py::int_ hall_number_from_symmetry(Rotations const &rotations,
+                                   Translations const &translations,
                                    py::float_ symprec);
 }  // namespace spglib

@@ -10,7 +10,7 @@ using namespace spglib;
 auto unkown_error_msg = "Unknown Spglib error, please report upstream.";
 
 class Spglib_classic_exception : public std::runtime_error {
-    static char const* _get_current_error_msg() {
+    static char const *_get_current_error_msg() {
         auto msg = spg_get_error_message(spg_get_error_code());
         if (msg == nullptr) msg = unkown_error_msg;
         return msg;
@@ -26,7 +26,7 @@ void try_throw_error() {
     throw std::runtime_error(msg);
 }
 
-Lattice::Lattice(array_double&& _array)
+Lattice::Lattice(array_double &&_array)
     : array{std::forward<array_double>(_array)} {
     if (array.ndim() != 2) throw std::invalid_argument("Lattice ndim is not 2");
     if (array.shape(0) != 3 || array.shape(1) != 3)
@@ -38,7 +38,7 @@ double (*Lattice::data())[3] {
 double const (*Lattice::data() const)[3] {
     return reinterpret_cast<double const(*)[3]>(array.data());
 }
-Rotations::Rotations(array_int&& _array)
+Rotations::Rotations(array_int &&_array)
     : array{std::forward<array_int>(_array)},
       n_operations(static_cast<int>(array.shape(0))) {
     if (array.ndim() != 3)
@@ -52,7 +52,7 @@ int (*Rotations::data())[3][3] {
 int const (*Rotations::data() const)[3][3] {
     return reinterpret_cast<int const(*)[3][3]>(array.data());
 }
-Translations::Translations(array_double&& _array)
+Translations::Translations(array_double &&_array)
     : array{std::forward<array_double>(_array)},
       n_operations(static_cast<int>(array.shape(0))) {
     if (array.ndim() != 2)
@@ -66,7 +66,7 @@ double (*Translations::data())[3] {
 double const (*Translations::data() const)[3] {
     return reinterpret_cast<double const(*)[3]>(array.data());
 }
-Symmetries::Symmetries(Rotations&& _rotations, Translations&& _translations)
+Symmetries::Symmetries(Rotations &&_rotations, Translations &&_translations)
     : rotations{std::forward<Rotations>(_rotations)},
       translations{std::forward<Translations>(_translations)},
       n_operations{rotations.n_operations} {
@@ -74,7 +74,7 @@ Symmetries::Symmetries(Rotations&& _rotations, Translations&& _translations)
         throw std::invalid_argument(
             "Number of Rotations and Translations is inconsistent");
 }
-Positions::Positions(array_double&& _array)
+Positions::Positions(array_double &&_array)
     : array{std::forward<array_double>(_array)},
       n_atoms(static_cast<int>(array.shape(0))) {
     if (array.ndim() != 2)
@@ -88,15 +88,15 @@ double (*Positions::data())[3] {
 double const (*Positions::data() const)[3] {
     return reinterpret_cast<double const(*)[3]>(array.data());
 }
-AtomTypes::AtomTypes(array_int&& _array)
+AtomTypes::AtomTypes(array_int &&_array)
     : array(std::forward<array_int>(_array)),
       n_atoms(static_cast<int>(array.shape(0))) {
     if (array.ndim() != 1)
         throw std::invalid_argument("AtomTypes ndim is not 1");
 }
-int* AtomTypes::data() { return array.mutable_data(); }
-int const* AtomTypes::data() const { return array.data(); }
-Magmoms::Magmoms(array_double&& _array)
+int *AtomTypes::data() { return array.mutable_data(); }
+int const *AtomTypes::data() const { return array.data(); }
+Magmoms::Magmoms(array_double &&_array)
     : array(std::forward<array_double>(_array)),
       n_atoms(static_cast<int>(array.shape(0))) {
     if (array.ndim() == 1) {
@@ -107,9 +107,9 @@ Magmoms::Magmoms(array_double&& _array)
     } else
         throw std::invalid_argument("Magmoms ndim is not 1 or 2");
 }
-double* Magmoms::data() { return array.mutable_data(); }
-double const* Magmoms::data() const { return array.data(); }
-Atoms::Atoms(Positions&& _positions, AtomTypes&& _types)
+double *Magmoms::data() { return array.mutable_data(); }
+double const *Magmoms::data() const { return array.data(); }
+Atoms::Atoms(Positions &&_positions, AtomTypes &&_types)
     : positions{std::forward<Positions>(_positions)},
       types{std::forward<AtomTypes>(_types)},
       n_atoms(positions.n_atoms) {
@@ -353,8 +353,8 @@ py::dict MagneticSpacegroupType_to_dict(
     return dict;
 }
 
-py::dict spglib::dataset(Lattice const& lattice, Positions const& positions,
-                         AtomTypes const& atom_types, py::int_ hall_number,
+py::dict spglib::dataset(Lattice const &lattice, Positions const &positions,
+                         AtomTypes const &atom_types, py::int_ hall_number,
                          py::float_ symprec, py::float_ angle_tolerance) {
     SpglibDataset *dataset;
     if ((dataset = spgat_get_dataset_with_hall_number(
@@ -366,9 +366,9 @@ py::dict spglib::dataset(Lattice const& lattice, Positions const& positions,
     spg_free_dataset(dataset);
     return array;
 }
-py::dict spglib::layer_dataset(Lattice const& lattice,
-                               Positions const& positions,
-                               AtomTypes const& atom_types,
+py::dict spglib::layer_dataset(Lattice const &lattice,
+                               Positions const &positions,
+                               AtomTypes const &atom_types,
                                py::int_ aperiodic_dir, py::float_ symprec) {
     SpglibDataset *dataset;
     if ((dataset = spg_get_layer_dataset(lattice.data(), positions.data(),
@@ -379,9 +379,9 @@ py::dict spglib::layer_dataset(Lattice const& lattice,
     spg_free_dataset(dataset);
     return array;
 }
-py::dict spglib::magnetic_dataset(Lattice const& lattice,
-                                  Positions const& positions,
-                                  AtomTypes const& atom_types,
+py::dict spglib::magnetic_dataset(Lattice const &lattice,
+                                  Positions const &positions,
+                                  AtomTypes const &atom_types,
                                   array_double magmoms, py::int_ tensor_rank,
                                   py::bool_ is_axial, py::float_ symprec,
                                   py::float_ angle_tolerance,
@@ -409,9 +409,9 @@ py::dict spglib::spacegroup_type(py::int_ hall_number) {
     if (spg_type.number == 0) throw Spglib_classic_exception();
     return SpacegroupType_to_dict(spg_type);
 }
-py::dict spglib::spacegroup_type_from_symmetry(Rotations const& rotations,
-                                               Translations const& translations,
-                                               Lattice const& lattice,
+py::dict spglib::spacegroup_type_from_symmetry(Rotations const &rotations,
+                                               Translations const &translations,
+                                               Lattice const &lattice,
                                                py::float_ symprec) {
     auto spg_type = spg_get_spacegroup_type_from_symmetry(
         rotations.data(), translations.data(), rotations.n_operations,
@@ -425,24 +425,24 @@ py::dict spglib::magnetic_spacegroup_type(py::int_ uni_number) {
     return MagneticSpacegroupType_to_dict(msg_type);
 }
 py::dict spglib::magnetic_spacegroup_type_from_symmetry(
-    Rotations const& rotations, Translations const& translations,
-    array_int time_reversals, Lattice const& lattice, py::float_ symprec) {
+    Rotations const &rotations, Translations const &translations,
+    array_int time_reversals, Lattice const &lattice, py::float_ symprec) {
     auto msg_type = spg_get_magnetic_spacegroup_type_from_symmetry(
         rotations.data(), translations.data(), (int *)time_reversals.data(),
         time_reversals.size(), lattice.data(), symprec);
     if (msg_type.number == 0) throw Spglib_classic_exception();
     return MagneticSpacegroupType_to_dict(msg_type);
 }
-py::int_ spglib::symmetry_from_database(Rotations& rotations,
-                                        Translations& translations,
+py::int_ spglib::symmetry_from_database(Rotations &rotations,
+                                        Translations &translations,
                                         py::int_ hall_number) {
     if (rotations.n_operations < 192 || translations.n_operations < 192)
         throw Spglib_classic_exception();
     return spg_get_symmetry_from_database(rotations.data(), translations.data(),
                                           hall_number);
 }
-py::int_ spglib::magnetic_symmetry_from_database(Rotations& rotations,
-                                                 Translations& translations,
+py::int_ spglib::magnetic_symmetry_from_database(Rotations &rotations,
+                                                 Translations &translations,
                                                  array_int time_reversals,
                                                  py::int_ uni_number,
                                                  py::int_ hall_number) {
@@ -466,7 +466,7 @@ py::tuple spglib::pointgroup(array_int rotations) {
     array[2] = transf_matrix;
     return array;
 }
-py::int_ spglib::standardize_cell(Lattice& lattice, Positions& positions,
+py::int_ spglib::standardize_cell(Lattice &lattice, Positions &positions,
                                   array_int atom_types, py::int_ num_atom,
                                   py::int_ to_primative, py::int_ no_idealize,
                                   py::float_ symprec,
@@ -475,16 +475,16 @@ py::int_ spglib::standardize_cell(Lattice& lattice, Positions& positions,
         lattice.data(), positions.data(), atom_types.mutable_data(), num_atom,
         to_primative, no_idealize, symprec, angle_tolerance);
 }
-py::int_ spglib::refine_cell(Lattice& lattice, Positions& positions,
-                             AtomTypes& atom_types, py::int_ num_atom,
+py::int_ spglib::refine_cell(Lattice &lattice, Positions &positions,
+                             AtomTypes &atom_types, py::int_ num_atom,
                              py::float_ symprec, py::float_ angle_tolerance) {
     return spgat_refine_cell(lattice.data(), positions.data(),
                              atom_types.data(), num_atom, symprec,
                              angle_tolerance);
 }
-py::int_ spglib::symmetry(Rotations& rotations, Translations& translations,
-                          Lattice const& lattice, Positions const& positions,
-                          AtomTypes const& atom_types, py::float_ symprec,
+py::int_ spglib::symmetry(Rotations &rotations, Translations &translations,
+                          Lattice const &lattice, Positions const &positions,
+                          AtomTypes const &atom_types, py::float_ symprec,
                           py::float_ angle_tolerance) {
     return spgat_get_symmetry(rotations.data(), translations.data(),
                               rotations.n_operations, lattice.data(),
@@ -492,9 +492,9 @@ py::int_ spglib::symmetry(Rotations& rotations, Translations& translations,
                               atom_types.n_atoms, symprec, angle_tolerance);
 }
 py::int_ spglib::symmetry_with_collinear_spin(
-    Rotations& rotations, Translations& translations, array_int equiv_atoms,
-    Lattice const& lattice, Positions const& positions,
-    AtomTypes const& atom_types, array_double magmoms, py::float_ symprec,
+    Rotations &rotations, Translations &translations, array_int equiv_atoms,
+    Lattice const &lattice, Positions const &positions,
+    AtomTypes const &atom_types, array_double magmoms, py::float_ symprec,
     py::float_ angle_tolerance) {
     return spgat_get_symmetry_with_collinear_spin(
         rotations.data(), translations.data(), equiv_atoms.mutable_data(),
@@ -502,9 +502,9 @@ py::int_ spglib::symmetry_with_collinear_spin(
         magmoms.data(), atom_types.n_atoms, symprec, angle_tolerance);
 }
 py::int_ spglib::symmetry_with_site_tensors(
-    Rotations& rotations, Translations& translations, array_int equiv_atoms,
-    Lattice& primitive_lattice, array_int spin_flips, Lattice const& lattice,
-    Positions const& positions, AtomTypes const& atom_types,
+    Rotations &rotations, Translations &translations, array_int equiv_atoms,
+    Lattice &primitive_lattice, array_int spin_flips, Lattice const &lattice,
+    Positions const &positions, AtomTypes const &atom_types,
     array_double tensors, py::int_ with_time_reversal, py::int_ is_axial,
     py::float_ symprec, py::float_ angle_tolerance, py::float_ mag_symprec) {
     int tensor_rank = tensors.ndim() - 1;
@@ -524,8 +524,8 @@ py::int_ spglib::symmetry_with_site_tensors(
         tensor_rank, atom_types.n_atoms, with_time_reversal, is_axial, symprec,
         angle_tolerance, mag_symprec);
 }
-py::int_ spglib::primitive(Lattice& lattice, Positions& positions,
-                           AtomTypes& atom_types, py::float_ symprec,
+py::int_ spglib::primitive(Lattice &lattice, Positions &positions,
+                           AtomTypes &atom_types, py::float_ symprec,
                            py::float_ angle_tolerance) {
     return spgat_find_primitive(lattice.data(), positions.data(),
                                 atom_types.data(), atom_types.n_atoms, symprec,
@@ -538,8 +538,8 @@ py::int_ spglib::grid_point_from_address(array_int grid_address,
 }
 py::int_ spglib::ir_reciprocal_mesh(
     array_int grid_address, array_int grid_mapping_table, array_int mesh,
-    array_int is_shift, py::int_ is_time_reversal, Lattice const& lattice,
-    Positions const& positions, AtomTypes const& atom_types,
+    array_int is_shift, py::int_ is_time_reversal, Lattice const &lattice,
+    Positions const &positions, AtomTypes const &atom_types,
     py::float_ symprec) {
     return spg_get_ir_reciprocal_mesh(
         (int (*)[3])grid_address.mutable_data(),
@@ -549,8 +549,8 @@ py::int_ spglib::ir_reciprocal_mesh(
 }
 py::int_ spglib::ir_reciprocal_mesh(
     array_int grid_address, array_size_t grid_mapping_table, array_int mesh,
-    array_int is_shift, py::int_ is_time_reversal, Lattice const& lattice,
-    Positions const& positions, AtomTypes const& atom_types,
+    array_int is_shift, py::int_ is_time_reversal, Lattice const &lattice,
+    Positions const &positions, AtomTypes const &atom_types,
     py::float_ symprec) {
     return spg_get_dense_ir_reciprocal_mesh(
         (int (*)[3])grid_address.mutable_data(),
@@ -562,7 +562,7 @@ py::int_ spglib::stabilized_reciprocal_mesh(array_int grid_address,
                                             array_int grid_mapping_table,
                                             array_int mesh, array_int is_shift,
                                             py::int_ is_time_reversal,
-                                            Rotations const& rotations,
+                                            Rotations const &rotations,
                                             array_double qpoints) {
     return spg_get_stabilized_reciprocal_mesh(
         (int (*)[3])grid_address.mutable_data(),
@@ -574,7 +574,7 @@ py::int_ spglib::stabilized_reciprocal_mesh(array_int grid_address,
                                             array_size_t grid_mapping_table,
                                             array_int mesh, array_int is_shift,
                                             py::int_ is_time_reversal,
-                                            Rotations const& rotations,
+                                            Rotations const &rotations,
                                             array_double qpoints) {
     return spg_get_dense_stabilized_reciprocal_mesh(
         (int (*)[3])grid_address.mutable_data(),
@@ -584,7 +584,7 @@ py::int_ spglib::stabilized_reciprocal_mesh(array_int grid_address,
 }
 void spglib::grid_points_by_rotations(array_size_t rot_grid_points,
                                       array_int address_orig,
-                                      Rotations const& rot_reciprocal,
+                                      Rotations const &rot_reciprocal,
                                       array_int mesh, array_int is_shift) {
     spg_get_dense_grid_points_by_rotations(
         rot_grid_points.mutable_data(), address_orig.data(),
@@ -593,7 +593,7 @@ void spglib::grid_points_by_rotations(array_size_t rot_grid_points,
 }
 void spglib::BZ_grid_points_by_rotations(array_size_t rot_grid_points,
                                          array_int address_orig,
-                                         Rotations const& rot_reciprocal,
+                                         Rotations const &rot_reciprocal,
                                          array_int mesh, array_int is_shift,
                                          array_size_t bz_map) {
     spg_get_dense_BZ_grid_points_by_rotations(
@@ -603,21 +603,21 @@ void spglib::BZ_grid_points_by_rotations(array_size_t rot_grid_points,
 }
 py::int_ spglib::BZ_grid_address(array_int bz_grid_address, array_size_t bz_map,
                                  array_int grid_address, array_int mesh,
-                                 Lattice const& reciprocal_lattice,
+                                 Lattice const &reciprocal_lattice,
                                  array_int is_shift) {
     return spg_relocate_dense_BZ_grid_address(
         (int (*)[3])bz_grid_address.mutable_data(), bz_map.mutable_data(),
         (int (*)[3])grid_address.data(), mesh.data(), reciprocal_lattice.data(),
         is_shift.data());
 }
-py::int_ spglib::delaunay_reduce(Lattice& lattice, py::float_ symprec) {
+py::int_ spglib::delaunay_reduce(Lattice &lattice, py::float_ symprec) {
     return spg_delaunay_reduce(lattice.data(), symprec);
 }
-py::int_ spglib::niggli_reduce(Lattice& lattice, py::float_ eps) {
+py::int_ spglib::niggli_reduce(Lattice &lattice, py::float_ eps) {
     return spg_niggli_reduce(lattice.data(), eps);
 }
-py::int_ spglib::hall_number_from_symmetry(Rotations const& rotations,
-                                           Translations const& translations,
+py::int_ spglib::hall_number_from_symmetry(Rotations const &rotations,
+                                           Translations const &translations,
                                            py::float_ symprec) {
     return spg_get_hall_number_from_symmetry(
         rotations.data(), translations.data(), rotations.n_operations, symprec);
