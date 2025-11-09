@@ -5,7 +5,7 @@
 
 #include "py_bindings.h"
 
-PYBIND11_MODULE(_spglib, module) {
+PYBIND11_MODULE(_spglib, module, py::mod_gil_not_used()) {
     using namespace py::literals;
     using namespace spglib;
     module.doc() = "Spglib compiled bindings.";
