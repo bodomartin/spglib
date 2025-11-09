@@ -88,8 +88,8 @@ double (*Positions::data())[3] {
 double const (*Positions::data() const)[3] {
     return reinterpret_cast<double const(*)[3]>(array.data());
 }
-AtomTypes::AtomTypes(array_double&& _array)
-    : array(std::forward<array_double>(_array)),
+AtomTypes::AtomTypes(array_int&& _array)
+    : array(std::forward<array_int>(_array)),
       n_atoms(static_cast<int>(array.shape(0))) {
     if (array.ndim() != 1)
         throw std::invalid_argument("Rotations ndim is not 1");

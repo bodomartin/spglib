@@ -71,7 +71,7 @@ class AtomTypes {
 
    public:
     int const n_atoms;
-    explicit AtomTypes(array_double&& _array);
+    explicit AtomTypes(array_int&& _array);
     int* data();
     [[nodiscard]]
     int const* data() const;
