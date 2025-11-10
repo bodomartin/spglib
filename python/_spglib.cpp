@@ -5,7 +5,13 @@
 
 #include "py_bindings.h"
 
+// py::mod_gil_not_used was added in pybind11 2.13 and
+#if (PYBIND11_VERSION_MAJOR == 2 && PYBIND11_VERSION_MINOR >= 13) || \
+    PYBIND11_VERSION_MAJOR >= 3
 PYBIND11_MODULE(_spglib, module, py::mod_gil_not_used()) {
+#else
+PYBIND11_MODULE(_spglib, module) {
+#endif
     using namespace py::literals;
     using namespace spglib;
     module.doc() = "Spglib compiled bindings.";
