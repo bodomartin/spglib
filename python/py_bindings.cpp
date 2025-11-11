@@ -18,13 +18,16 @@ py::str spglib::version_string() { return spg_get_version(); }
 py::str spglib::version_full() { return spg_get_version_full(); }
 py::str spglib::commit() { return spg_get_commit(); }
 
-py::list build_python_list_from_dataset(SpglibDataset *dataset) {
-    py::list array{21};
-    array[0] = dataset->spacegroup_number;
-    array[1] = dataset->hall_number;
-    array[2] = dataset->international_symbol;
-    array[3] = dataset->hall_symbol;
-    array[4] = dataset->choice;
+static auto wyckoffs_index_to_letter =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+py::dict Dataset_to_dict(SpglibDataset *dataset) {
+    py::dict dict{};
+    dict["number"] = dataset->spacegroup_number;
+    dict["hall_number"] = dataset->hall_number;
+    dict["international"] = dataset->international_symbol;
+    dict["hall"] = dataset->hall_symbol;
+    dict["choice"] = dataset->choice;
     {
         array_double transformation_matrix({3, 3});
         array_double origin_shift(3);
@@ -34,8 +37,8 @@ py::list build_python_list_from_dataset(SpglibDataset *dataset) {
                     dataset->transformation_matrix[i][j];
             origin_shift.mutable_at(i) = dataset->origin_shift[i];
         }
-        array[5] = transformation_matrix;
-        array[6] = origin_shift;
+        dict["transformation_matrix"] = transformation_matrix;
+        dict["origin_shift"] = origin_shift;
     }
     {
         array_int rotations({dataset->n_operations, 3, 3});
@@ -48,11 +51,11 @@ py::list build_python_list_from_dataset(SpglibDataset *dataset) {
                 translations.mutable_at(ind_oper, i) =
                     dataset->translations[ind_oper][i];
             }
-        array[7] = rotations;
-        array[8] = translations;
+        dict["rotations"] = rotations;
+        dict["translations"] = translations;
     }
     {
-        array_int wyckoffs(dataset->n_atoms);
+        py::list wyckoffs(dataset->n_atoms);
         py::list site_symmetry_symbols(dataset->n_atoms);
         array_int crystallographic_orbits(dataset->n_atoms);
         array_int equiv_atoms(dataset->n_atoms);
@@ -60,7 +63,8 @@ py::list build_python_list_from_dataset(SpglibDataset *dataset) {
         array_int mapping_to_primitive(dataset->n_atoms);
         array_double std_lattice({3, 3});
         for (auto ind_atom = 0; ind_atom < dataset->n_atoms; ind_atom++) {
-            wyckoffs.mutable_at(ind_atom) = dataset->wyckoffs[ind_atom];
+            wyckoffs[ind_atom] =
+                wyckoffs_index_to_letter[dataset->wyckoffs[ind_atom]];
             site_symmetry_symbols[ind_atom] =
                 dataset->site_symmetry_symbols[ind_atom];
             crystallographic_orbits.mutable_at(ind_atom) =
@@ -72,17 +76,19 @@ py::list build_python_list_from_dataset(SpglibDataset *dataset) {
         }
         for (auto i = 0; i < 3; i++)
             for (auto j = 0; j < 3; j++) {
+                // Transposed
                 primitive_lattice.mutable_at(i, j) =
-                    dataset->primitive_lattice[i][j];
-                std_lattice.mutable_at(i, j) = dataset->std_lattice[i][j];
+                    dataset->primitive_lattice[j][i];
+                // Transposed
+                std_lattice.mutable_at(i, j) = dataset->std_lattice[j][i];
             }
-        array[9] = wyckoffs;
-        array[10] = site_symmetry_symbols;
-        array[11] = crystallographic_orbits;
-        array[12] = equiv_atoms;
-        array[13] = primitive_lattice;
-        array[14] = mapping_to_primitive;
-        array[15] = std_lattice;
+        dict["wyckoffs"] = wyckoffs;
+        dict["site_symmetry_symbols"] = site_symmetry_symbols;
+        dict["crystallographic_orbits"] = crystallographic_orbits;
+        dict["equivalent_atoms"] = equiv_atoms;
+        dict["primitive_lattice"] = primitive_lattice;
+        dict["mapping_to_primitive"] = mapping_to_primitive;
+        dict["std_lattice"] = std_lattice;
     }
     {
         array_int std_types(dataset->n_std_atoms);
@@ -101,23 +107,23 @@ py::list build_python_list_from_dataset(SpglibDataset *dataset) {
             for (auto j = 0; j < 3; j++)
                 std_rotations.mutable_at(i, j) =
                     dataset->std_rotation_matrix[i][j];
-        array[16] = std_types;
-        array[17] = std_positions;
-        array[18] = std_rotations;
-        array[19] = std_mapping_to_primitive;
+        dict["std_types"] = std_types;
+        dict["std_positions"] = std_positions;
+        dict["std_rotation_matrix"] = std_rotations;
+        dict["std_mapping_to_primitive"] = std_mapping_to_primitive;
     }
-    array[20] = dataset->pointgroup_symbol;
-    return array;
+    dict["pointgroup"] = dataset->pointgroup_symbol;
+    return dict;
 }
 
-py::list build_python_list_from_magnetic_dataset(SpglibMagneticDataset *dataset,
-                                                 int tensor_rank) {
-    py::list array{19};
-    array[0] = dataset->uni_number;
-    array[1] = dataset->msg_type;
-    array[2] = dataset->hall_number;
-    array[3] = dataset->tensor_rank;
-    array[4] = dataset->n_operations;
+py::dict MagneticDataset_to_dict(SpglibMagneticDataset *dataset,
+                                 int tensor_rank) {
+    py::dict dict{};
+    dict["uni_number"] = dataset->uni_number;
+    dict["msg_type"] = dataset->msg_type;
+    dict["hall_number"] = dataset->hall_number;
+    dict["tensor_rank"] = dataset->tensor_rank;
+    dict["n_operations"] = dataset->n_operations;
     {
         array_int rotations({dataset->n_operations, 3, 3});
         array_double translations({dataset->n_operations, 3});
@@ -133,17 +139,17 @@ py::list build_python_list_from_magnetic_dataset(SpglibMagneticDataset *dataset,
             time_reversal.mutable_at(ind_oper) =
                 dataset->time_reversals[ind_oper];
         }
-        array[5] = rotations;
-        array[6] = translations;
-        array[7] = time_reversal;
+        dict["rotations"] = rotations;
+        dict["translations"] = translations;
+        dict["time_reversals"] = time_reversal;
     }
-    array[8] = dataset->n_atoms;
+    dict["n_atoms"] = dataset->n_atoms;
     {
         array_int equiv_atoms(dataset->n_atoms);
         for (auto ind_atom = 0; ind_atom < dataset->n_atoms; ind_atom++)
             equiv_atoms.mutable_at(ind_atom) =
                 dataset->equivalent_atoms[ind_atom];
-        array[9] = equiv_atoms;
+        dict["equivalent_atoms"] = equiv_atoms;
     }
     {
         array_double transformation_matrix({3, 3});
@@ -154,16 +160,17 @@ py::list build_python_list_from_magnetic_dataset(SpglibMagneticDataset *dataset,
                     dataset->transformation_matrix[i][j];
             origin_shift.mutable_at(i) = dataset->origin_shift[i];
         }
-        array[10] = transformation_matrix;
-        array[11] = origin_shift;
+        dict["transformation_matrix"] = transformation_matrix;
+        dict["origin_shift"] = origin_shift;
     }
-    array[12] = dataset->n_std_atoms;
+    dict["n_std_atoms"] = dataset->n_std_atoms;
     {
         array_double std_lattice({3, 3});
         for (auto i = 0; i < 3; i++)
             for (auto j = 0; j < 3; j++)
-                std_lattice.mutable_at(i, j) = dataset->std_lattice[i][j];
-        array[13] = std_lattice;
+                // Transposed
+                std_lattice.mutable_at(i, j) = dataset->std_lattice[j][i];
+        dict["std_lattice"] = std_lattice;
     }
     {
         array_int std_types(dataset->n_std_atoms);
@@ -174,8 +181,8 @@ py::list build_python_list_from_magnetic_dataset(SpglibMagneticDataset *dataset,
                 std_positions.mutable_at(ind_atom, i) =
                     dataset->std_positions[ind_atom][i];
         }
-        array[14] = std_types;
-        array[15] = std_positions;
+        dict["std_types"] = std_types;
+        dict["std_positions"] = std_positions;
     }
     {
         int n_tensors = dataset->n_std_atoms;
@@ -184,7 +191,8 @@ py::list build_python_list_from_magnetic_dataset(SpglibMagneticDataset *dataset,
         for (auto ind_tensor = 0; ind_tensor < n_tensors; ind_tensor++)
             std_tensors.mutable_at(ind_tensor) =
                 dataset->std_tensors[ind_tensor];
-        array[16] = std_tensors;
+        if (tensor_rank == 1) std_tensors = std_tensors.reshape({-1, 3});
+        dict["std_tensors"] = std_tensors;
     }
     {
         array_double std_rotations({3, 3});
@@ -193,46 +201,48 @@ py::list build_python_list_from_magnetic_dataset(SpglibMagneticDataset *dataset,
             for (auto j = 0; j < 3; j++) {
                 std_rotations.mutable_at(i, j) =
                     dataset->std_rotation_matrix[i][j];
+                // Transposed
                 primitive_lattice.mutable_at(i, j) =
-                    dataset->primitive_lattice[i][j];
+                    dataset->primitive_lattice[j][i];
             }
-        array[17] = std_rotations;
-        array[18] = primitive_lattice;
+        dict["std_rotation_matrix"] = std_rotations;
+        dict["primitive_lattice"] = primitive_lattice;
     }
-    return array;
+    return dict;
 }
 
-py::list build_python_list_from_spacegroup_type(
-    SpglibSpacegroupType &spg_type) {
-    py::list array{12};
-    array[0] = spg_type.number;
-    array[1] = spg_type.international_short;
-    array[2] = spg_type.international_full;
-    array[3] = spg_type.international;
-    array[4] = spg_type.schoenflies;
-    array[5] = spg_type.hall_number;
-    array[6] = spg_type.hall_symbol;
-    array[7] = spg_type.choice;
-    array[8] = spg_type.pointgroup_international;
-    array[9] = spg_type.pointgroup_schoenflies;
-    array[10] = spg_type.arithmetic_crystal_class_number;
-    array[11] = spg_type.arithmetic_crystal_class_symbol;
-    return array;
+py::dict SpacegroupType_to_dict(SpglibSpacegroupType &spg_type) {
+    py::dict dict{};
+    dict["number"] = spg_type.number;
+    dict["international_short"] = spg_type.international_short;
+    dict["international_full"] = spg_type.international_full;
+    dict["international"] = spg_type.international;
+    dict["schoenflies"] = spg_type.schoenflies;
+    dict["hall_number"] = spg_type.hall_number;
+    dict["hall_symbol"] = spg_type.hall_symbol;
+    dict["choice"] = spg_type.choice;
+    dict["pointgroup_international"] = spg_type.pointgroup_international;
+    dict["pointgroup_schoenflies"] = spg_type.pointgroup_schoenflies;
+    dict["arithmetic_crystal_class_number"] =
+        spg_type.arithmetic_crystal_class_number;
+    dict["arithmetic_crystal_class_symbol"] =
+        spg_type.arithmetic_crystal_class_symbol;
+    return dict;
 }
 
-py::list build_python_list_from_magnetic_spacegroup_type(
+py::dict MagneticSpacegroupType_to_dict(
     SpglibMagneticSpacegroupType &spg_type) {
-    py::list array{6};
-    array[0] = spg_type.uni_number;
-    array[1] = spg_type.litvin_number;
-    array[2] = spg_type.bns_number;
-    array[3] = spg_type.og_number;
-    array[4] = spg_type.number;
-    array[5] = spg_type.type;
-    return array;
+    py::dict dict{};
+    dict["uni_number"] = spg_type.uni_number;
+    dict["litvin_number"] = spg_type.litvin_number;
+    dict["bns_number"] = spg_type.bns_number;
+    dict["og_number"] = spg_type.og_number;
+    dict["number"] = spg_type.number;
+    dict["type"] = spg_type.type;
+    return dict;
 }
 
-std::optional<py::list> spglib::dataset(
+std::optional<py::dict> spglib::dataset(
     array_double lattice, array_double positions, array_int atom_types,
     py::int_ hall_number, py::float_ symprec, py::float_ angle_tolerance) {
     SpglibDataset *dataset;
@@ -241,11 +251,11 @@ std::optional<py::list> spglib::dataset(
              atom_types.data(), atom_types.size(), hall_number, symprec,
              angle_tolerance)) == nullptr)
         return {};
-    auto array = build_python_list_from_dataset(dataset);
+    auto array = Dataset_to_dict(dataset);
     spg_free_dataset(dataset);
     return array;
 }
-std::optional<py::list> spglib::layer_dataset(array_double lattice,
+std::optional<py::dict> spglib::layer_dataset(array_double lattice,
                                               array_double positions,
                                               array_int atom_types,
                                               py::int_ aperiodic_dir,
@@ -256,11 +266,11 @@ std::optional<py::list> spglib::layer_dataset(array_double lattice,
              atom_types.data(), atom_types.size(), aperiodic_dir, symprec)) ==
         nullptr)
         return {};
-    auto array = build_python_list_from_dataset(dataset);
+    auto array = Dataset_to_dict(dataset);
     spg_free_dataset(dataset);
     return array;
 }
-std::optional<py::list> spglib::magnetic_dataset(
+std::optional<py::dict> spglib::magnetic_dataset(
     array_double lattice, array_double positions, array_int atom_types,
     array_double magmoms, py::int_ tensor_rank, py::bool_ is_axial,
     py::float_ symprec, py::float_ angle_tolerance, py::float_ mag_symprec) {
@@ -278,30 +288,30 @@ std::optional<py::list> spglib::magnetic_dataset(
             // Invalid, return None
             return {};
     }
-    auto array = build_python_list_from_magnetic_dataset(dataset, tensor_rank);
+    auto array = MagneticDataset_to_dict(dataset, tensor_rank);
     spg_free_magnetic_dataset(dataset);
     return array;
 }
-std::optional<py::list> spglib::spacegroup_type(py::int_ hall_number) {
+std::optional<py::dict> spglib::spacegroup_type(py::int_ hall_number) {
     auto spg_type = spg_get_spacegroup_type(hall_number);
     if (spg_type.number == 0) return {};
-    return build_python_list_from_spacegroup_type(spg_type);
+    return SpacegroupType_to_dict(spg_type);
 }
-std::optional<py::list> spglib::spacegroup_type_from_symmetry(
+std::optional<py::dict> spglib::spacegroup_type_from_symmetry(
     array_int rotations, array_double translations, array_double lattice,
     py::float_ symprec) {
     auto spg_type = spg_get_spacegroup_type_from_symmetry(
         (int (*)[3][3])rotations.data(), (double (*)[3])translations.data(),
         rotations.shape(0), (double (*)[3])lattice.data(), symprec);
     if (spg_type.number == 0) return {};
-    return build_python_list_from_spacegroup_type(spg_type);
+    return SpacegroupType_to_dict(spg_type);
 }
-std::optional<py::list> spglib::magnetic_spacegroup_type(py::int_ uni_number) {
+std::optional<py::dict> spglib::magnetic_spacegroup_type(py::int_ uni_number) {
     auto msg_type = spg_get_magnetic_spacegroup_type(uni_number);
     if (msg_type.number == 0) return {};
-    return build_python_list_from_magnetic_spacegroup_type(msg_type);
+    return MagneticSpacegroupType_to_dict(msg_type);
 }
-std::optional<py::list> spglib::magnetic_spacegroup_type_from_symmetry(
+std::optional<py::dict> spglib::magnetic_spacegroup_type_from_symmetry(
     array_int rotations, array_double translations, array_int time_reversals,
     array_double lattice, py::float_ symprec) {
     auto msg_type = spg_get_magnetic_spacegroup_type_from_symmetry(
@@ -309,7 +319,7 @@ std::optional<py::list> spglib::magnetic_spacegroup_type_from_symmetry(
         (int *)time_reversals.data(), time_reversals.size(),
         (double (*)[3])lattice.data(), symprec);
     if (msg_type.number == 0) return {};
-    return build_python_list_from_magnetic_spacegroup_type(msg_type);
+    return MagneticSpacegroupType_to_dict(msg_type);
 }
 std::optional<py::int_> spglib::symmetry_from_database(
     array_int rotations, array_double translations, py::int_ hall_number) {

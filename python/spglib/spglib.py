@@ -795,60 +795,6 @@ def get_magnetic_symmetry(
         }
 
 
-def _build_dataset_dict(spg_ds: list[Any]) -> SpglibDataset:
-    letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-    dataset = SpglibDataset(
-        number=spg_ds[0],
-        hall_number=spg_ds[1],
-        international=spg_ds[2].strip(),
-        hall=spg_ds[3].strip(),
-        choice=spg_ds[4].strip(),
-        transformation_matrix=np.array(
-            spg_ds[5],
-            dtype="double",
-            order="C",
-        ),
-        origin_shift=np.array(spg_ds[6], dtype="double"),
-        rotations=np.array(spg_ds[7], dtype="intc", order="C"),
-        translations=np.array(spg_ds[8], dtype="double", order="C"),
-        wyckoffs=[letters[x] for x in spg_ds[9]],
-        site_symmetry_symbols=[s.strip() for s in spg_ds[10]],
-        crystallographic_orbits=np.array(
-            spg_ds[11],
-            dtype="intc",
-        ),
-        equivalent_atoms=np.array(spg_ds[12], dtype="intc"),
-        primitive_lattice=np.array(
-            np.transpose(spg_ds[13]),
-            dtype="double",
-            order="C",
-        ),
-        mapping_to_primitive=np.array(
-            spg_ds[14],
-            dtype="intc",
-        ),
-        std_lattice=np.array(
-            np.transpose(spg_ds[15]),
-            dtype="double",
-            order="C",
-        ),
-        std_types=np.array(spg_ds[16], dtype="intc"),
-        std_positions=np.array(spg_ds[17], dtype="double", order="C"),
-        std_rotation_matrix=np.array(
-            spg_ds[18],
-            dtype="double",
-            order="C",
-        ),
-        std_mapping_to_primitive=np.array(
-            spg_ds[19],
-            dtype="intc",
-        ),
-        pointgroup=spg_ds[20].strip(),
-    )
-    return dataset
-
-
 def get_symmetry_dataset(
     cell: SpgCell,
     symprec: float = 1e-5,
@@ -906,8 +852,7 @@ def get_symmetry_dataset(
         _set_error_message()
         return None
 
-    dataset = _build_dataset_dict(spg_ds)
-    return dataset
+    return SpglibDataset(**spg_ds)
 
 
 def get_symmetry_layerdataset(
@@ -929,9 +874,7 @@ def get_symmetry_layerdataset(
         _set_error_message()
         return None
 
-    dataset = _build_dataset_dict(spg_ds)
-
-    return dataset
+    return SpglibDataset(**spg_ds)
 
 
 def get_magnetic_symmetry_dataset(
@@ -985,40 +928,7 @@ def get_magnetic_symmetry_dataset(
         _set_error_message()
         return None
 
-    tensor_rank = spg_ds[3]
-    std_tensors = np.array(spg_ds[16], dtype="double", order="C")
-    if tensor_rank == 1:
-        std_tensors = std_tensors.reshape(-1, 3)
-
-    dataset = SpglibMagneticDataset(
-        # Magnetic space-group type
-        uni_number=spg_ds[0],
-        msg_type=spg_ds[1],
-        hall_number=spg_ds[2],
-        tensor_rank=tensor_rank,
-        # Magnetic symmetry operations
-        n_operations=spg_ds[4],
-        rotations=np.array(spg_ds[5], dtype="intc", order="C"),
-        translations=np.array(spg_ds[6], dtype="double", order="C"),
-        time_reversals=np.array(spg_ds[7], dtype="intc"),
-        # Equivalent atoms
-        n_atoms=spg_ds[8],
-        equivalent_atoms=np.array(spg_ds[9], dtype="intc"),
-        # Transformation to standardized setting
-        transformation_matrix=np.array(spg_ds[10], dtype="double", order="C"),
-        origin_shift=np.array(spg_ds[11], dtype="double"),
-        # Standardized crystal structure
-        n_std_atoms=spg_ds[12],
-        std_lattice=np.array(np.transpose(spg_ds[13]), dtype="double", order="C"),
-        std_types=np.array(spg_ds[14], dtype="intc"),
-        std_positions=np.array(spg_ds[15], dtype="double", order="C"),
-        std_tensors=std_tensors,
-        std_rotation_matrix=np.array(spg_ds[17], dtype="double", order="C"),
-        # Intermediate datum in symmetry search
-        primitive_lattice=np.array(np.transpose(spg_ds[18]), dtype="double", order="C"),
-    )
-
-    return dataset
+    return SpglibMagneticDataset(**spg_ds)
 
 
 def get_layergroup(
@@ -1091,24 +1001,10 @@ def get_spacegroup_type(hall_number: int) -> SpaceGroupType | None:
     """
     _set_no_error()
 
-    spg_type_list = _spglib.spacegroup_type(hall_number)
+    spg_type = _spglib.spacegroup_type(hall_number)
 
-    if spg_type_list is not None:
-        spg_type = SpaceGroupType(
-            number=spg_type_list[0],
-            international_short=spg_type_list[1].strip(),
-            international_full=spg_type_list[2].strip(),
-            international=spg_type_list[3].strip(),
-            schoenflies=spg_type_list[4].strip(),
-            hall_number=spg_type_list[5],
-            hall_symbol=spg_type_list[6].strip(),
-            choice=spg_type_list[7].strip(),
-            pointgroup_international=spg_type_list[8].strip(),
-            pointgroup_schoenflies=spg_type_list[9].strip(),
-            arithmetic_crystal_class_number=spg_type_list[10],
-            arithmetic_crystal_class_symbol=spg_type_list[11].strip(),
-        )
-        return spg_type
+    if spg_type is not None:
+        return SpaceGroupType(**spg_type)
     else:
         _set_error_message()
         return None
@@ -1165,23 +1061,9 @@ def get_spacegroup_type_from_symmetry(
 
     _set_no_error()
 
-    spg_type_list = _spglib.spacegroup_type_from_symmetry(r, t, _lattice, symprec)
-    if spg_type_list is not None:
-        spg_type = SpaceGroupType(
-            number=spg_type_list[0],
-            international_short=spg_type_list[1].strip(),
-            international_full=spg_type_list[2].strip(),
-            international=spg_type_list[3].strip(),
-            schoenflies=spg_type_list[4].strip(),
-            hall_number=spg_type_list[5],
-            hall_symbol=spg_type_list[6].strip(),
-            choice=spg_type_list[7].strip(),
-            pointgroup_international=spg_type_list[8].strip(),
-            pointgroup_schoenflies=spg_type_list[9].strip(),
-            arithmetic_crystal_class_number=spg_type_list[10],
-            arithmetic_crystal_class_symbol=spg_type_list[11].strip(),
-        )
-        return spg_type
+    spg_type = _spglib.spacegroup_type_from_symmetry(r, t, _lattice, symprec)
+    if spg_type is not None:
+        return SpaceGroupType(**spg_type)
     else:
         _set_error_message()
         return None
@@ -1208,18 +1090,10 @@ def get_magnetic_spacegroup_type(uni_number: int) -> MagneticSpaceGroupType | No
     """
     _set_no_error()
 
-    msg_type_list = _spglib.magnetic_spacegroup_type(uni_number)
+    msg_type = _spglib.magnetic_spacegroup_type(uni_number)
 
-    if msg_type_list is not None:
-        msg_type = MagneticSpaceGroupType(
-            uni_number=msg_type_list[0],
-            litvin_number=msg_type_list[1],
-            bns_number=msg_type_list[2].strip(),
-            og_number=msg_type_list[3].strip(),
-            number=msg_type_list[4],
-            type=msg_type_list[5],
-        )
-        return msg_type
+    if msg_type is not None:
+        return MagneticSpaceGroupType(**msg_type)
     else:
         _set_error_message()
         return None
@@ -1258,20 +1132,12 @@ def get_magnetic_spacegroup_type_from_symmetry(
         latt = np.array(lattice, dtype="double", order="C")
 
     _set_no_error()
-    msg_type_list = _spglib.magnetic_spacegroup_type_from_symmetry(
+    msg_type = _spglib.magnetic_spacegroup_type_from_symmetry(
         rots, trans, timerev, latt, symprec
     )
 
-    if msg_type_list is not None:
-        msg_type = MagneticSpaceGroupType(
-            uni_number=msg_type_list[0],
-            litvin_number=msg_type_list[1],
-            bns_number=msg_type_list[2].strip(),
-            og_number=msg_type_list[3].strip(),
-            number=msg_type_list[4],
-            type=msg_type_list[5],
-        )
-        return msg_type
+    if msg_type is not None:
+        return MagneticSpaceGroupType(**msg_type)
     else:
         _set_error_message()
         return None
