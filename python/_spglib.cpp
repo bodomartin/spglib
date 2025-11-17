@@ -16,6 +16,11 @@ PYBIND11_MODULE(_spglib, module) {
     using namespace spglib;
     module.doc() = "Spglib compiled bindings.";
 
+    // Register the cpp Spglib error with a base class of the python one.
+    auto base_error = py::module_::import("spglib.error").attr("SpglibError");
+    py::register_exception<SpglibError>(module, "SpglibCppError",
+                                        base_error.ptr());
+
     py::class_<Lattice>(module, "Lattice").def(py::init<array_double>());
     py::implicitly_convertible<array_double, Lattice>();
     py::class_<Rotations>(module, "Rotations").def(py::init<array_int>());

@@ -118,6 +118,8 @@ Atoms::Atoms(Positions &&_positions, AtomTypes &&_types)
             "Number of Positions and Types is inconsistent");
 }
 
+spglib::SpglibError::SpglibError(std::string_view _msg) : msg{_msg} {}
+char const *spglib::SpglibError::what() const noexcept { return msg.c_str(); }
 py::tuple spglib::version_tuple() {
     py::tuple version(3);
     version[0] = spg_get_major_version();

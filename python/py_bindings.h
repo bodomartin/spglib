@@ -96,6 +96,14 @@ class Atoms {
     Atoms(Positions &&_positions, AtomTypes &&_types);
 };
 
+class SpglibError : public std::exception {
+    std::string msg;
+
+   public:
+    SpglibError(std::string_view _msg);
+    char const *what() const noexcept override;
+};
+
 py::tuple version_tuple();
 py::str version_string();
 py::str version_full();
