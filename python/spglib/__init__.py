@@ -13,11 +13,4 @@ from .kpoints import *  # noqa: F403
 from .msg import *  # noqa: F403
 from .reduce import *  # noqa: F403
 from .spg import *  # noqa: F403
-
-# fmt: off
-from .spglib import (  # noqa: F401
-    get_hall_number_from_symmetry,
-)
-
-# fmt: on
 from .utils import *  # noqa: F403

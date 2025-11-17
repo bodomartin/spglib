@@ -41,6 +41,10 @@ Positions: TypeAlias = Sequence[Sequence[float]]
 Numbers: TypeAlias = Sequence[int]
 Magmoms: TypeAlias = Union[Sequence[float], Sequence[Sequence[float]]]
 
+# Compatibility alias for some deprecated interfaces
+Cell: TypeAlias = Union["spglib.spg.SpgCell", "spglib.msg.MsgCell"]
+"""Either SpgCell or MsgCell."""
+
 
 @dataclasses.dataclass(eq=True, frozen=True)
 class DictInterface(Mapping[str, "Any"]):
@@ -112,7 +116,7 @@ def spg_get_commit() -> str:
 
 
 def _expand_cell(
-    cell: spglib.spg.Cell,
+    cell: Cell,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray | None]:
     try:
         lattice = np.array(np.transpose(cell[0]), dtype="double", order="C")

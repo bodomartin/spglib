@@ -10,8 +10,7 @@ from numpy.typing import ArrayLike
 
 from . import _spglib
 from .error import _set_no_error, _set_or_throw_error
-from .spglib import Cell
-from .utils import _expand_cell
+from .utils import Cell, _expand_cell
 
 __all__ = [
     "get_ir_reciprocal_mesh",

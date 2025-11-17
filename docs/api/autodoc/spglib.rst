@@ -20,5 +20,4 @@ Submodules
    spglib.msg
    spglib.reduce
    spglib.spg
-   spglib.spglib
    spglib.utils
