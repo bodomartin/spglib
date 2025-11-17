@@ -9,7 +9,7 @@ import numpy as np
 from numpy.typing import ArrayLike
 
 from . import _spglib
-from .spglib import _set_no_error, _set_or_throw_error
+from .error import _set_no_error, _set_or_throw_error
 
 __all__ = [
     "delaunay_reduce",

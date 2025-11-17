@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import dataclasses
-import os
 import warnings
 from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING, Union
@@ -18,7 +17,7 @@ import spglib
 from . import _spglib
 from ._compat.typing import TypeAlias
 from ._compat.warnings import deprecated
-from .error import SpglibError
+from .error import SpglibError, _set_no_error, _set_or_throw_error
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -27,7 +26,6 @@ if TYPE_CHECKING:
     from numpy.typing import ArrayLike
 
 __all__ = [
-    "get_error_message",
     "get_hall_number_from_symmetry",
     "get_version",
     "spg_get_commit",
@@ -45,18 +43,6 @@ Numbers: TypeAlias = Sequence[int]
 Magmoms: TypeAlias = Union[Sequence[float], Sequence[Sequence[float]]]
 Cell: TypeAlias = Union["spglib.spg.SpgCell", "spglib.msg.MsgCell"]
 """Either SpgCell or MsgCell."""
-
-
-OLD_ERROR_HANDLING: bool = True
-"""
-Use the old error handling.
-
-Note that this variable may be removed in the future or change value in the future.
-You can also use :envvar:`SPGLIB_OLD_ERROR_HANDLING` instead of altering this value.
-"""
-
-
-_spglib_error = ""
 
 
 @dataclasses.dataclass(eq=True, frozen=True)
@@ -128,23 +114,6 @@ def spg_get_commit() -> str:
     return _spglib.commit()
 
 
-@deprecated("Set OLD_ERROR_HANDLING to false and catch the errors directly")
-def get_error_message() -> str:
-    """Return error message why spglib failed.
-
-    .. warning::
-        This method is not thread safe, i.e., only safely usable
-        when calling one spglib method per process.
-
-    Notes
-    -----
-    .. versionadded:: 1.9.5
-    .. deprecated:: 2.7.0
-
-    """
-    return _spglib_error
-
-
 def _expand_cell(
     cell: Cell,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray | None]:
@@ -193,41 +162,6 @@ def _expand_cell(
         raise SpglibError(f"Generic Spglib error:\n{exc}") from exc
 
     return (lattice, positions, numbers, magmoms)
-
-
-def _check_OLD_ERROR_HANDLING() -> bool:
-    env_var = os.environ.get("SPGLIB_OLD_ERROR_HANLDING")
-    if env_var is not None:
-        if env_var.lower() in ("false", "0"):
-            return False
-        return True
-    return OLD_ERROR_HANDLING
-
-
-def _set_or_throw_error(exc: Exception, _throw: bool = False) -> None:
-    if _throw or not _check_OLD_ERROR_HANDLING():
-        if isinstance(exc, SpglibError):
-            # Our native errors we pass transparently
-            raise exc
-        # Otherwise we try to recast them to SplibError
-        raise SpglibError(f"Generic Spglib error:\n{exc}") from exc
-    warnings.warn(
-        "Set OLD_ERROR_HANDLING to false and catch the errors directly.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    _spglib_error = str(exc)
-
-
-def _set_no_error(_throw: bool = False) -> None:
-    if _throw or not _check_OLD_ERROR_HANDLING():
-        return
-    warnings.warn(
-        "Set OLD_ERROR_HANDLING to false and catch the errors directly.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    _spglib_error = "no error"
 
 
 @deprecated("Use get_spacegroup_type_from_symmetry instead")

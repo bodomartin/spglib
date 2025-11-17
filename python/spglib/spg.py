@@ -16,6 +16,7 @@ import spglib
 
 from . import _spglib
 from ._compat.typing import TypeAlias
+from .error import _set_no_error, _set_or_throw_error
 from .spglib import (
     Cell,
     DictInterface,
@@ -23,8 +24,6 @@ from .spglib import (
     Numbers,
     Positions,
     _expand_cell,
-    _set_no_error,
-    _set_or_throw_error,
 )
 
 __all__ = [

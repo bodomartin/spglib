@@ -198,7 +198,7 @@ details, see {ref}`variables_symprec`, {ref}`variables_angle_tolerance`, and
 
 ### Error
 
-- {py:func}`spglib.spglib.get_error_message`
+- {py:func}`spglib.error.get_error_message`
 
 ### Space-group symmetry search
 
