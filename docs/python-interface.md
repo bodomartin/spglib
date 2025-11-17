@@ -202,12 +202,12 @@ details, see {ref}`variables_symprec`, {ref}`variables_angle_tolerance`, and
 
 ### Space-group symmetry search
 
-- {py:func}`spglib.spglib.get_symmetry`
-- {py:func}`spglib.spglib.get_symmetry_dataset`
+- {py:func}`spglib.spg.get_symmetry`
+- {py:func}`spglib.spg.get_symmetry_dataset`
 
 ### Space-group type search
 
-- {py:func}`spglib.spglib.get_spacegroup`
+- {py:func}`spglib.spg.get_spacegroup`
 
 ### Standardization and finding primitive cell
 
@@ -217,9 +217,9 @@ details, see {ref}`variables_symprec`, {ref}`variables_angle_tolerance`, and
 
 ### Space-group dataset access
 
-- {py:func}`spglib.spglib.get_symmetry_from_database`
-- {py:func}`spglib.spglib.get_spacegroup_type`
-- {py:func}`spglib.spglib.get_spacegroup_type_from_symmetry`
+- {py:func}`spglib.spg.get_symmetry_from_database`
+- {py:func}`spglib.spg.get_spacegroup_type`
+- {py:func}`spglib.spg.get_spacegroup_type_from_symmetry`
 
 ### Magnetic symmetry
 

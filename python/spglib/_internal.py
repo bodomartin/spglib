@@ -9,9 +9,8 @@ import numpy as np
 from numpy._typing import ArrayLike
 
 from . import _spglib
+from .spg import SpgCell, SpglibDataset
 from .spglib import (
-    SpgCell,
-    SpglibDataset,
     _expand_cell,
     _set_no_error,
     _set_or_throw_error,

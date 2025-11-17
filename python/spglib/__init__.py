@@ -10,20 +10,13 @@ from ._version import __version__, __version_tuple__  # noqa: F401
 from .kpoints import *  # noqa: F403
 from .msg import *  # noqa: F403
 from .reduce import *  # noqa: F403
+from .spg import *  # noqa: F403
 
 # fmt: off
 from .spglib import (  # noqa: F401
-    SpaceGroupType,
-    SpglibDataset,
     find_primitive,
     get_error_message,
     get_hall_number_from_symmetry,
-    get_spacegroup,
-    get_spacegroup_type,
-    get_spacegroup_type_from_symmetry,
-    get_symmetry,
-    get_symmetry_dataset,
-    get_symmetry_from_database,
     get_version,
     refine_cell,
     spg_get_commit,

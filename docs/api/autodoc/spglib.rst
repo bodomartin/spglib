@@ -18,4 +18,5 @@ Submodules
    spglib.kpoints
    spglib.msg
    spglib.reduce
+   spglib.spg
    spglib.spglib
