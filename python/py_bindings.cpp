@@ -9,7 +9,7 @@ using namespace spglib;
 
 auto unkown_error_msg = "Unknown Spglib error, please report upstream.";
 
-class Spglib_classic_exception : public std::runtime_error {
+class Spglib_classic_exception : public spglib::SpglibError {
     static char const *_get_current_error_msg() {
         auto msg = spg_get_error_message(spg_get_error_code());
         if (msg == nullptr) msg = unkown_error_msg;
@@ -17,20 +17,20 @@ class Spglib_classic_exception : public std::runtime_error {
     }
 
    public:
-    Spglib_classic_exception() : std::runtime_error{_get_current_error_msg()} {}
+    Spglib_classic_exception() : SpglibError{_get_current_error_msg()} {}
 };
 
 void try_throw_error() {
     auto msg = spg_get_error_message(spg_get_error_code());
     if (msg == nullptr) msg = unkown_error_msg;
-    throw std::runtime_error(msg);
+    throw spglib::SpglibError(msg);
 }
 
 Lattice::Lattice(array_double &&_array)
     : array{std::forward<array_double>(_array)} {
-    if (array.ndim() != 2) throw std::invalid_argument("Lattice ndim is not 2");
+    if (array.ndim() != 2) throw SpglibError("Lattice ndim is not 2");
     if (array.shape(0) != 3 || array.shape(1) != 3)
-        throw std::invalid_argument("Lattice is not a 3x3 matrix");
+        throw SpglibError("Lattice is not a 3x3 matrix");
 }
 double (*Lattice::data())[3] {
     return reinterpret_cast<double (*)[3]>(array.mutable_data());
@@ -41,10 +41,9 @@ double const (*Lattice::data() const)[3] {
 Rotations::Rotations(array_int &&_array)
     : array{std::forward<array_int>(_array)},
       n_operations(static_cast<int>(array.shape(0))) {
-    if (array.ndim() != 3)
-        throw std::invalid_argument("Rotations ndim is not 3");
+    if (array.ndim() != 3) throw SpglibError("Rotations ndim is not 3");
     if (array.shape(1) != 3 || array.shape(2) != 3)
-        throw std::invalid_argument("Lattice is not a nx3x3 matrix");
+        throw SpglibError("Lattice is not a nx3x3 matrix");
 }
 int (*Rotations::data())[3][3] {
     return reinterpret_cast<int (*)[3][3]>(array.mutable_data());
@@ -55,10 +54,8 @@ int const (*Rotations::data() const)[3][3] {
 Translations::Translations(array_double &&_array)
     : array{std::forward<array_double>(_array)},
       n_operations(static_cast<int>(array.shape(0))) {
-    if (array.ndim() != 2)
-        throw std::invalid_argument("Rotations ndim is not 3");
-    if (array.shape(1) != 3)
-        throw std::invalid_argument("Lattice is not a nx3 matrix");
+    if (array.ndim() != 2) throw SpglibError("Rotations ndim is not 3");
+    if (array.shape(1) != 3) throw SpglibError("Lattice is not a nx3 matrix");
 }
 double (*Translations::data())[3] {
     return reinterpret_cast<double (*)[3]>(array.mutable_data());
@@ -71,16 +68,14 @@ Symmetries::Symmetries(Rotations &&_rotations, Translations &&_translations)
       translations{std::forward<Translations>(_translations)},
       n_operations{rotations.n_operations} {
     if (rotations.n_operations != translations.n_operations)
-        throw std::invalid_argument(
+        throw SpglibError(
             "Number of Rotations and Translations is inconsistent");
 }
 Positions::Positions(array_double &&_array)
     : array{std::forward<array_double>(_array)},
       n_atoms(static_cast<int>(array.shape(0))) {
-    if (array.ndim() != 2)
-        throw std::invalid_argument("Rotations ndim is not 2");
-    if (array.shape(1) != 3)
-        throw std::invalid_argument("Lattice is not a nx3 matrix");
+    if (array.ndim() != 2) throw SpglibError("Rotations ndim is not 2");
+    if (array.shape(1) != 3) throw SpglibError("Lattice is not a nx3 matrix");
 }
 double (*Positions::data())[3] {
     return reinterpret_cast<double (*)[3]>(array.mutable_data());
@@ -91,8 +86,7 @@ double const (*Positions::data() const)[3] {
 AtomTypes::AtomTypes(array_int &&_array)
     : array(std::forward<array_int>(_array)),
       n_atoms(static_cast<int>(array.shape(0))) {
-    if (array.ndim() != 1)
-        throw std::invalid_argument("AtomTypes ndim is not 1");
+    if (array.ndim() != 1) throw SpglibError("AtomTypes ndim is not 1");
 }
 int *AtomTypes::data() { return array.mutable_data(); }
 int const *AtomTypes::data() const { return array.data(); }
@@ -103,9 +97,9 @@ Magmoms::Magmoms(array_double &&_array)
         // Allowed
     } else if (array.ndim() != 2) {
         if (array.shape(1) != 3)
-            throw std::invalid_argument("Lattice is not a nx3 matrix");
+            throw SpglibError("Lattice is not a nx3 matrix");
     } else
-        throw std::invalid_argument("Magmoms ndim is not 1 or 2");
+        throw SpglibError("Magmoms ndim is not 1 or 2");
 }
 double *Magmoms::data() { return array.mutable_data(); }
 double const *Magmoms::data() const { return array.data(); }
@@ -114,8 +108,7 @@ Atoms::Atoms(Positions &&_positions, AtomTypes &&_types)
       types{std::forward<AtomTypes>(_types)},
       n_atoms(positions.n_atoms) {
     if (positions.n_atoms != types.n_atoms)
-        throw std::invalid_argument(
-            "Number of Positions and Types is inconsistent");
+        throw SpglibError("Number of Positions and Types is inconsistent");
 }
 
 spglib::SpglibError::SpglibError(std::string_view _msg) : msg{_msg} {}
@@ -399,8 +392,7 @@ py::dict spglib::magnetic_dataset(Lattice const &lattice,
         case 1:
             break;
         default:
-            throw std::runtime_error("Unexpected tensor_rank value: " +
-                                     tensor_rank);
+            throw SpglibError("Unexpected tensor_rank value: " + tensor_rank);
     }
     auto array = MagneticDataset_to_dict(dataset, tensor_rank);
     spg_free_magnetic_dataset(dataset);
