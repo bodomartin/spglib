@@ -16,6 +16,7 @@ import numpy as np
 from . import _spglib
 from ._compat.typing import TypeAlias
 from ._compat.warnings import deprecated
+from .error import SpglibError
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -1568,42 +1569,49 @@ def get_error_message() -> str:
 def _expand_cell(
     cell: Cell,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray | None]:
-    lattice = np.array(np.transpose(cell[0]), dtype="double", order="C")
-    positions = np.array(cell[1], dtype="double", order="C")
-    numbers = np.array(cell[2], dtype="intc")
-    if len(cell) == 4:
-        magmoms = np.array(cell[3], order="C", dtype="double")
-    elif len(cell) == 3:
-        magmoms = None
-    else:
-        raise TypeError("cell has to be a tuple of 3 or 4 elements.")
-
-    # Sanity check
-    if lattice.shape != (3, 3):
-        raise TypeError("lattice has to be a (3, 3) array.")
-    if not (positions.ndim == 2 and positions.shape[1] == 3):
-        raise TypeError("positions has to be a (num_atoms, 3) array.")
-    num_atoms = positions.shape[0]
-    if numbers.ndim != 1:
-        raise TypeError("numbers has to be a (num_atoms,) array.")
-    if len(numbers) != num_atoms:
-        raise TypeError("numbers has to have the same number of atoms as positions.")
-    if magmoms is not None:
-        if len(magmoms) != num_atoms:
-            raise TypeError(
-                "magmoms has to have the same number of atoms as positions."
-            )
-        if magmoms.ndim == 1:
-            # collinear
-            pass
-        elif magmoms.ndim == 2:
-            # non-collinear
-            if magmoms.shape[1] != 3:
-                raise TypeError(
-                    "non-collinear magmoms has to be a (num_atoms, 3) array."
-                )
+    try:
+        lattice = np.array(np.transpose(cell[0]), dtype="double", order="C")
+        positions = np.array(cell[1], dtype="double", order="C")
+        numbers = np.array(cell[2], dtype="intc")
+        if len(cell) == 4:
+            magmoms = np.array(cell[3], order="C", dtype="double")
+        elif len(cell) == 3:
+            magmoms = None
         else:
-            raise TypeError("magmoms has to be a 1D or 2D array.")
+            raise TypeError("cell has to be a tuple of 3 or 4 elements.")
+
+        # Sanity check
+        if lattice.shape != (3, 3):
+            raise TypeError("lattice has to be a (3, 3) array.")
+        if not (positions.ndim == 2 and positions.shape[1] == 3):
+            raise TypeError("positions has to be a (num_atoms, 3) array.")
+        num_atoms = positions.shape[0]
+        if numbers.ndim != 1:
+            raise TypeError("numbers has to be a (num_atoms,) array.")
+        if len(numbers) != num_atoms:
+            raise TypeError(
+                "numbers has to have the same number of atoms as positions."
+            )
+        if magmoms is not None:
+            if len(magmoms) != num_atoms:
+                raise TypeError(
+                    "magmoms has to have the same number of atoms as positions."
+                )
+            if magmoms.ndim == 1:
+                # collinear
+                pass
+            elif magmoms.ndim == 2:
+                # non-collinear
+                if magmoms.shape[1] != 3:
+                    raise TypeError(
+                        "non-collinear magmoms has to be a (num_atoms, 3) array."
+                    )
+            else:
+                raise TypeError("magmoms has to be a 1D or 2D array.")
+    except Exception as exc:
+        # Note: these will eventually be moved to the C++ side
+        # For now we just recast them to SpglibError
+        raise SpglibError(f"Generic Spglib error:\n{exc}") from exc
 
     return (lattice, positions, numbers, magmoms)
 
@@ -1619,7 +1627,11 @@ def _check_OLD_ERROR_HANDLING() -> bool:
 
 def _set_or_throw_error(exc: Exception, _throw: bool = False) -> None:
     if _throw or not _check_OLD_ERROR_HANDLING():
-        raise exc
+        if isinstance(exc, SpglibError):
+            # Our native errors we pass transparently
+            raise exc
+        # Otherwise we try to recast them to SplibError
+        raise SpglibError(f"Generic Spglib error:\n{exc}") from exc
     warnings.warn(
         "Set OLD_ERROR_HANDLING to false and catch the errors directly.",
         DeprecationWarning,
