@@ -223,11 +223,11 @@ details, see {ref}`variables_symprec`, {ref}`variables_angle_tolerance`, and
 
 ### Magnetic symmetry
 
-- {py:func}`spglib.spglib.get_magnetic_symmetry`
-- {py:func}`spglib.spglib.get_magnetic_symmetry_dataset`
-- {py:func}`spglib.spglib.get_magnetic_spacegroup_type`
-- {py:func}`spglib.spglib.get_magnetic_spacegroup_type_from_symmetry`
-- {py:func}`spglib.spglib.get_magnetic_symmetry_from_database`
+- {py:func}`spglib.msg.get_magnetic_symmetry`
+- {py:func}`spglib.msg.get_magnetic_symmetry_dataset`
+- {py:func}`spglib.msg.get_magnetic_spacegroup_type`
+- {py:func}`spglib.msg.get_magnetic_spacegroup_type_from_symmetry`
+- {py:func}`spglib.msg.get_magnetic_symmetry_from_database`
 
 ### Lattice reduction
 
