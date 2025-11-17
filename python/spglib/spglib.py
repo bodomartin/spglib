@@ -79,13 +79,7 @@ You can also use :envvar:`SPGLIB_OLD_ERROR_HANDLING` instead of altering this va
 """
 
 
-class SpglibError:
-    """Error message why spglib failed."""
-
-    message = "no error"
-
-
-spglib_error = SpglibError()
+_spglib_error = ""
 
 
 @dataclasses.dataclass(eq=True, frozen=True)
@@ -1568,7 +1562,7 @@ def get_error_message() -> str:
     .. deprecated:: 2.7.0
 
     """
-    return spglib_error.message
+    return _spglib_error
 
 
 def _expand_cell(
@@ -1631,7 +1625,7 @@ def _set_or_throw_error(exc: Exception, _throw: bool = False) -> None:
         DeprecationWarning,
         stacklevel=2,
     )
-    spglib_error.message = str(exc)
+    _spglib_error = str(exc)
 
 
 def _set_no_error(_throw: bool = False) -> None:
@@ -1642,7 +1636,7 @@ def _set_no_error(_throw: bool = False) -> None:
         DeprecationWarning,
         stacklevel=2,
     )
-    spglib_error.message = "no error"
+    _spglib_error = "no error"
 
 
 @deprecated("Use get_spacegroup_type_from_symmetry instead")
