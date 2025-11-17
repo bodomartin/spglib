@@ -2,8 +2,9 @@
 
 ```{toctree}
 ---
+caption: Python API
+glob:
 maxdepth: 1
 ---
-Python API <python-api>
-Unreleased API <develop>
+autodoc/*
 ```
