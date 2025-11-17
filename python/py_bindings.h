@@ -19,6 +19,9 @@ using array_uintp =
 using array_size_t =
     py::array_t<size_t, py::array::c_style | py::array::forcecast>;
 
+// Specialized classes wrapping the numpy-like python arrays incorporating
+// sanity checks like ndim and shape consistency checks.
+
 class Lattice {
     array_double array;
 
