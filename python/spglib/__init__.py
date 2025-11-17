@@ -8,6 +8,7 @@
 from ._internal import *  # noqa: F403
 from ._version import __version__, __version_tuple__  # noqa: F401
 from .kpoints import *  # noqa: F403
+from .reduce import *  # noqa: F403
 
 # fmt: off
 from .spglib import (  # noqa: F401
@@ -15,7 +16,6 @@ from .spglib import (  # noqa: F401
     SpaceGroupType,
     SpglibDataset,
     SpglibMagneticDataset,
-    delaunay_reduce,
     find_primitive,
     get_error_message,
     get_hall_number_from_symmetry,
@@ -31,7 +31,6 @@ from .spglib import (  # noqa: F401
     get_symmetry_dataset,
     get_symmetry_from_database,
     get_version,
-    niggli_reduce,
     refine_cell,
     spg_get_commit,
     spg_get_version,

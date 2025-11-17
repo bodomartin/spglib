@@ -231,8 +231,8 @@ details, see {ref}`variables_symprec`, {ref}`variables_angle_tolerance`, and
 
 ### Lattice reduction
 
-- {py:func}`spglib.spglib.niggli_reduce`
-- {py:func}`spglib.spglib.delaunay_reduce`
+- {py:func}`spglib.reduce.niggli_reduce`
+- {py:func}`spglib.reduce.delaunay_reduce`
 
 ### Kpoints
 

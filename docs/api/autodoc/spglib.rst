@@ -16,4 +16,5 @@ Submodules
    spglib._internal
    spglib.error
    spglib.kpoints
+   spglib.reduce
    spglib.spglib
