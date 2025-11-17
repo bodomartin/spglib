@@ -21,3 +21,4 @@ Submodules
    spglib.reduce
    spglib.spg
    spglib.spglib
+   spglib.utils

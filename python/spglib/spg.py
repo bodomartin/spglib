@@ -17,14 +17,8 @@ import spglib
 from . import _spglib
 from ._compat.typing import TypeAlias
 from .error import _set_no_error, _set_or_throw_error
-from .spglib import (
-    Cell,
-    DictInterface,
-    Lattice,
-    Numbers,
-    Positions,
-    _expand_cell,
-)
+from .spglib import Cell
+from .utils import DictInterface, Lattice, Numbers, Positions, _expand_cell
 
 __all__ = [
     "SpgCell",

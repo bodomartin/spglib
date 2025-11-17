@@ -17,9 +17,7 @@ from .spg import *  # noqa: F403
 # fmt: off
 from .spglib import (  # noqa: F401
     get_hall_number_from_symmetry,
-    get_version,
-    spg_get_commit,
-    spg_get_version,
-    spg_get_version_full,
 )
+
 # fmt: on
+from .utils import *  # noqa: F403

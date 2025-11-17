@@ -14,14 +14,7 @@ from numpy.typing import ArrayLike, NDArray
 from . import _spglib
 from ._compat.typing import TypeAlias
 from .error import _set_no_error, _set_or_throw_error
-from .spglib import (
-    DictInterface,
-    Lattice,
-    Magmoms,
-    Numbers,
-    Positions,
-    _expand_cell,
-)
+from .utils import DictInterface, Lattice, Magmoms, Numbers, Positions, _expand_cell
 
 __all__ = [
     "MsgCell",

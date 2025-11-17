@@ -194,7 +194,7 @@ details, see {ref}`variables_symprec`, {ref}`variables_angle_tolerance`, and
 
 ### Version
 
-- {py:func}`spglib.spglib.get_version`
+- {py:func}`spglib.utils.get_version`
 
 ### Error
 

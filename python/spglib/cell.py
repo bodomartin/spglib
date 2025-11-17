@@ -10,7 +10,7 @@ import numpy as np
 from . import _spglib
 from .error import _set_no_error, _set_or_throw_error
 from .spg import SpgCell
-from .spglib import _expand_cell
+from .utils import _expand_cell
 
 __all__ = [
     "standardize_cell",
