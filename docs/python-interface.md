@@ -211,9 +211,9 @@ details, see {ref}`variables_symprec`, {ref}`variables_angle_tolerance`, and
 
 ### Standardization and finding primitive cell
 
-- {py:func}`spglib.spglib.standardize_cell`
-- {py:func}`spglib.spglib.find_primitive`
-- {py:func}`spglib.spglib.refine_cell`
+- {py:func}`spglib.cell.standardize_cell`
+- {py:func}`spglib.cell.find_primitive`
+- {py:func}`spglib.cell.refine_cell`
 
 ### Space-group dataset access
 

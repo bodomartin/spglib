@@ -14,6 +14,7 @@ Submodules
    :maxdepth: 4
 
    spglib._internal
+   spglib.cell
    spglib.error
    spglib.kpoints
    spglib.msg
