@@ -10,6 +10,7 @@ hidden:
    Spglib dataset <dataset>
    Magnetic spglib dataset (Experimental) <magnetic_dataset>
    Variables <variable>
+exceptions/index
    Spglib for Python <python-interface>
    Rust, Fortran, and Ruby interfaces <interface>
    Definitions and conventions <definition>
