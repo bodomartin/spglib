@@ -15,4 +15,5 @@ Submodules
 
    spglib._internal
    spglib.error
+   spglib.kpoints
    spglib.spglib

@@ -7,6 +7,7 @@
 #  backwards compatibility
 from ._internal import *  # noqa: F403
 from ._version import __version__, __version_tuple__  # noqa: F401
+from .kpoints import *  # noqa: F403
 
 # fmt: off
 from .spglib import (  # noqa: F401
@@ -18,7 +19,6 @@ from .spglib import (  # noqa: F401
     find_primitive,
     get_error_message,
     get_hall_number_from_symmetry,
-    get_ir_reciprocal_mesh,
     get_magnetic_spacegroup_type,
     get_magnetic_spacegroup_type_from_symmetry,
     get_magnetic_symmetry,
@@ -38,5 +38,4 @@ from .spglib import (  # noqa: F401
     spg_get_version_full,
     standardize_cell,
 )
-
 # fmt: on

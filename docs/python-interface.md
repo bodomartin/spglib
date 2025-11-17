@@ -236,7 +236,7 @@ details, see {ref}`variables_symprec`, {ref}`variables_angle_tolerance`, and
 
 ### Kpoints
 
-- {py:func}`spglib.spglib.get_ir_reciprocal_mesh`
+- {py:func}`spglib.kpoints.get_ir_reciprocal_mesh`
 
 ```python
 mapping, grid = get_ir_reciprocal_mesh(mesh, cell, is_shift=[0, 0, 0])
