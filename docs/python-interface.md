@@ -305,12 +305,3 @@ for i, (ir_gp_id, gp) in enumerate(zip(mapping, grid)):
 print("Number of ir-kpoints: %d" % len(np.unique(mapping)))
 print((grid[np.unique(mapping)] + [0.5, 0.5, 0.5]) / mesh)
 ```
-
-### Deprecated
-
-```{caution} Following functions are deprecated!
-```
-
-```{eval-rst}
-.. autofunction:: spglib.spglib.get_hall_number_from_symmetry
-```
