@@ -222,7 +222,7 @@ class SpglibDataset(DictInterface):
     """
     # Idealized standardized unit cell
     std_lattice: NDArray[np.double]
-    """Basis vectors a, b, c of a standardized cell in row vectors.
+    """Basis vectors a, b, c of an idealized standardized cell in row vectors.
 
     shape=(3, 3), order='C', dtype='double'
     """
