@@ -351,12 +351,10 @@ py::dict MagneticSpacegroupType_to_dict(
 py::dict spglib::dataset(Lattice const &lattice, Positions const &positions,
                          AtomTypes const &atom_types, py::int_ hall_number,
                          py::float_ symprec, py::float_ angle_tolerance) {
-    SpglibDataset *dataset;
-    if ((dataset = spgat_get_dataset_with_hall_number(
-             lattice.data(), positions.data(), atom_types.data(),
-             atom_types.n_atoms, hall_number, symprec, angle_tolerance)) ==
-        nullptr)
-        throw Spglib_classic_exception();
+    auto dataset = spgat_get_dataset_with_hall_number(
+        lattice.data(), positions.data(), atom_types.data(), atom_types.n_atoms,
+        hall_number, symprec, angle_tolerance);
+    if (dataset == nullptr) throw Spglib_classic_exception();
     auto array = Dataset_to_dict(dataset);
     spg_free_dataset(dataset);
     return array;
@@ -365,11 +363,10 @@ py::dict spglib::layer_dataset(Lattice const &lattice,
                                Positions const &positions,
                                AtomTypes const &atom_types,
                                py::int_ aperiodic_dir, py::float_ symprec) {
-    SpglibDataset *dataset;
-    if ((dataset = spg_get_layer_dataset(lattice.data(), positions.data(),
+    auto dataset = spg_get_layer_dataset(lattice.data(), positions.data(),
                                          atom_types.data(), atom_types.n_atoms,
-                                         aperiodic_dir, symprec)) == nullptr)
-        throw Spglib_classic_exception();
+                                         aperiodic_dir, symprec);
+    if (dataset == nullptr) throw Spglib_classic_exception();
     auto array = Dataset_to_dict(dataset);
     spg_free_dataset(dataset);
     return array;
@@ -381,18 +378,20 @@ py::dict spglib::magnetic_dataset(Lattice const &lattice,
                                   py::bool_ is_axial, py::float_ symprec,
                                   py::float_ angle_tolerance,
                                   py::float_ mag_symprec) {
-    SpglibMagneticDataset *dataset;
-    if ((dataset = spgms_get_magnetic_dataset(
-             lattice.data(), positions.data(), atom_types.data(),
-             magmoms.data(), tensor_rank, positions.n_atoms, is_axial * 1,
-             symprec, angle_tolerance, mag_symprec)) == nullptr)
-        throw Spglib_classic_exception();
+    auto dataset = spgms_get_magnetic_dataset(
+        lattice.data(), positions.data(), atom_types.data(), magmoms.data(),
+        tensor_rank, positions.n_atoms, is_axial * 1, symprec, angle_tolerance,
+        mag_symprec);
+    if (dataset == nullptr) throw Spglib_classic_exception();
     switch (int(tensor_rank)) {
         case 0:
         case 1:
             break;
         default:
-            throw SpglibError("Unexpected tensor_rank value: " + tensor_rank);
+            spg_free_magnetic_dataset(dataset);
+            auto msg = std::string("Unexpected tensor_rank value: ");
+            msg += tensor_rank;
+            throw SpglibError(msg);
     }
     auto array = MagneticDataset_to_dict(dataset, tensor_rank);
     spg_free_magnetic_dataset(dataset);
@@ -432,8 +431,10 @@ py::int_ spglib::symmetry_from_database(Rotations &rotations,
                                         py::int_ hall_number) {
     if (rotations.n_operations < 192 || translations.n_operations < 192)
         throw Spglib_classic_exception();
-    return spg_get_symmetry_from_database(rotations.data(), translations.data(),
-                                          hall_number);
+    auto val = spg_get_symmetry_from_database(rotations.data(),
+                                              translations.data(), hall_number);
+    if (val == 0) throw Spglib_classic_exception();
+    return val;
 }
 py::int_ spglib::magnetic_symmetry_from_database(Rotations &rotations,
                                                  Translations &translations,
@@ -443,9 +444,11 @@ py::int_ spglib::magnetic_symmetry_from_database(Rotations &rotations,
     if (rotations.n_operations < 384 || translations.n_operations < 384 ||
         time_reversals.shape(0) < 384)
         throw Spglib_classic_exception();
-    return spg_get_magnetic_symmetry_from_database(
+    auto val = spg_get_magnetic_symmetry_from_database(
         rotations.data(), translations.data(), (int *)time_reversals.data(),
         uni_number, hall_number);
+    if (val == 0) throw Spglib_classic_exception();
+    return val;
 }
 py::tuple spglib::pointgroup(array_int rotations) {
     char symbol[6];
@@ -453,7 +456,7 @@ py::tuple spglib::pointgroup(array_int rotations) {
     auto ptg_num =
         spg_get_pointgroup(symbol, (int (*)[3])transf_matrix.mutable_data(),
                            (int (*)[3][3])rotations.data(), rotations.shape(0));
-
+    if (ptg_num == 0) throw Spglib_classic_exception();
     py::list array(3);
     array[0] = symbol;
     array[1] = ptg_num;
@@ -465,35 +468,45 @@ py::int_ spglib::standardize_cell(Lattice &lattice, Positions &positions,
                                   py::int_ to_primative, py::int_ no_idealize,
                                   py::float_ symprec,
                                   py::float_ angle_tolerance) {
-    return spgat_standardize_cell(
+    auto val = spgat_standardize_cell(
         lattice.data(), positions.data(), atom_types.mutable_data(), num_atom,
         to_primative, no_idealize, symprec, angle_tolerance);
+    if (val == 0) throw Spglib_classic_exception();
+    return val;
 }
 py::int_ spglib::refine_cell(Lattice &lattice, Positions &positions,
                              AtomTypes &atom_types, py::int_ num_atom,
                              py::float_ symprec, py::float_ angle_tolerance) {
-    return spgat_refine_cell(lattice.data(), positions.data(),
-                             atom_types.data(), num_atom, symprec,
-                             angle_tolerance);
+    auto val =
+        spgat_refine_cell(lattice.data(), positions.data(), atom_types.data(),
+                          num_atom, symprec, angle_tolerance);
+    if (val > 0)
+        // Valid value
+        return val;
+    throw Spglib_classic_exception();
 }
 py::int_ spglib::symmetry(Rotations &rotations, Translations &translations,
                           Lattice const &lattice, Positions const &positions,
                           AtomTypes const &atom_types, py::float_ symprec,
                           py::float_ angle_tolerance) {
-    return spgat_get_symmetry(rotations.data(), translations.data(),
-                              rotations.n_operations, lattice.data(),
-                              positions.data(), atom_types.data(),
-                              atom_types.n_atoms, symprec, angle_tolerance);
+    auto val = spgat_get_symmetry(rotations.data(), translations.data(),
+                                  rotations.n_operations, lattice.data(),
+                                  positions.data(), atom_types.data(),
+                                  atom_types.n_atoms, symprec, angle_tolerance);
+    if (val == 0) throw Spglib_classic_exception();
+    return val;
 }
 py::int_ spglib::symmetry_with_collinear_spin(
     Rotations &rotations, Translations &translations, array_int equiv_atoms,
     Lattice const &lattice, Positions const &positions,
     AtomTypes const &atom_types, array_double magmoms, py::float_ symprec,
     py::float_ angle_tolerance) {
-    return spgat_get_symmetry_with_collinear_spin(
+    auto val = spgat_get_symmetry_with_collinear_spin(
         rotations.data(), translations.data(), equiv_atoms.mutable_data(),
         equiv_atoms.size(), lattice.data(), positions.data(), atom_types.data(),
         magmoms.data(), atom_types.n_atoms, symprec, angle_tolerance);
+    if (val == 0) throw Spglib_classic_exception();
+    return val;
 }
 py::int_ spglib::symmetry_with_site_tensors(
     Rotations &rotations, Translations &translations, array_int equiv_atoms,
@@ -511,22 +524,29 @@ py::int_ spglib::symmetry_with_site_tensors(
         default:
             spin_flips_ptr = nullptr;
     }
-    return spgms_get_symmetry_with_site_tensors(
+    auto val = spgms_get_symmetry_with_site_tensors(
         rotations.data(), translations.data(), equiv_atoms.mutable_data(),
         primitive_lattice.data(), spin_flips_ptr, rotations.n_operations,
         lattice.data(), positions.data(), atom_types.data(), tensors.data(),
         tensor_rank, atom_types.n_atoms, with_time_reversal, is_axial, symprec,
         angle_tolerance, mag_symprec);
+    if (val == 0) throw Spglib_classic_exception();
+    return val;
 }
 py::int_ spglib::primitive(Lattice &lattice, Positions &positions,
                            AtomTypes &atom_types, py::float_ symprec,
                            py::float_ angle_tolerance) {
-    return spgat_find_primitive(lattice.data(), positions.data(),
-                                atom_types.data(), atom_types.n_atoms, symprec,
-                                angle_tolerance);
+    auto val = spgat_find_primitive(lattice.data(), positions.data(),
+                                    atom_types.data(), atom_types.n_atoms,
+                                    symprec, angle_tolerance);
+    if (val == 0) throw Spglib_classic_exception();
+    return val;
 }
 py::int_ spglib::grid_point_from_address(array_int grid_address,
                                          array_int mesh) {
+    // TODO: Throw if input is unexpected
+    // Otherwise does not seem to have errors associated.
+    // Also this is not generally exposed, maybe get rid of it?
     return spg_get_dense_grid_point_from_address(grid_address.data(),
                                                  mesh.data());
 }
@@ -535,22 +555,28 @@ py::int_ spglib::ir_reciprocal_mesh(
     array_int is_shift, py::int_ is_time_reversal, Lattice const &lattice,
     Positions const &positions, AtomTypes const &atom_types,
     py::float_ symprec) {
-    return spg_get_ir_reciprocal_mesh(
+    auto val = spg_get_ir_reciprocal_mesh(
         (int (*)[3])grid_address.mutable_data(),
         grid_mapping_table.mutable_data(), mesh.data(), is_shift.data(),
         is_time_reversal, lattice.data(), positions.data(), atom_types.data(),
         atom_types.n_atoms, symprec);
+    if (val > 0)
+        // Valid value
+        return val;
+    throw Spglib_classic_exception();
 }
 py::int_ spglib::ir_reciprocal_mesh(
     array_int grid_address, array_size_t grid_mapping_table, array_int mesh,
     array_int is_shift, py::int_ is_time_reversal, Lattice const &lattice,
     Positions const &positions, AtomTypes const &atom_types,
     py::float_ symprec) {
-    return spg_get_dense_ir_reciprocal_mesh(
+    auto val = spg_get_dense_ir_reciprocal_mesh(
         (int (*)[3])grid_address.mutable_data(),
         grid_mapping_table.mutable_data(), mesh.data(), is_shift.data(),
         is_time_reversal, lattice.data(), positions.data(), atom_types.data(),
         atom_types.n_atoms, symprec);
+    if (val == 0) throw Spglib_classic_exception();
+    return val;
 }
 py::int_ spglib::stabilized_reciprocal_mesh(array_int grid_address,
                                             array_int grid_mapping_table,
@@ -558,11 +584,15 @@ py::int_ spglib::stabilized_reciprocal_mesh(array_int grid_address,
                                             py::int_ is_time_reversal,
                                             Rotations const &rotations,
                                             array_double qpoints) {
-    return spg_get_stabilized_reciprocal_mesh(
+    auto val = spg_get_stabilized_reciprocal_mesh(
         (int (*)[3])grid_address.mutable_data(),
         grid_mapping_table.mutable_data(), mesh.data(), is_shift.data(),
         is_time_reversal, rotations.n_operations, rotations.data(),
         qpoints.shape(0), (double (*)[3])qpoints.data());
+    if (val > 0)
+        // Valid value, did not error
+        return val;
+    throw Spglib_classic_exception();
 }
 py::int_ spglib::stabilized_reciprocal_mesh(array_int grid_address,
                                             array_size_t grid_mapping_table,
@@ -570,16 +600,20 @@ py::int_ spglib::stabilized_reciprocal_mesh(array_int grid_address,
                                             py::int_ is_time_reversal,
                                             Rotations const &rotations,
                                             array_double qpoints) {
-    return spg_get_dense_stabilized_reciprocal_mesh(
+    auto val = spg_get_dense_stabilized_reciprocal_mesh(
         (int (*)[3])grid_address.mutable_data(),
         grid_mapping_table.mutable_data(), mesh.data(), is_shift.data(),
         is_time_reversal, rotations.n_operations, rotations.data(),
         qpoints.shape(0), (double (*)[3])qpoints.data());
+    if (val == 0) throw Spglib_classic_exception();
+    return val;
 }
 void spglib::grid_points_by_rotations(array_size_t rot_grid_points,
                                       array_int address_orig,
                                       Rotations const &rot_reciprocal,
                                       array_int mesh, array_int is_shift) {
+    // TODO: Throw if input is unexpected
+    // Otherwise does not seem to have errors associated.
     spg_get_dense_grid_points_by_rotations(
         rot_grid_points.mutable_data(), address_orig.data(),
         rot_reciprocal.n_operations, rot_reciprocal.data(), mesh.data(),
@@ -590,6 +624,8 @@ void spglib::BZ_grid_points_by_rotations(array_size_t rot_grid_points,
                                          Rotations const &rot_reciprocal,
                                          array_int mesh, array_int is_shift,
                                          array_size_t bz_map) {
+    // TODO: Throw if input is unexpected
+    // Otherwise does not seem to have errors associated.
     spg_get_dense_BZ_grid_points_by_rotations(
         rot_grid_points.mutable_data(), address_orig.data(),
         rot_reciprocal.n_operations, rot_reciprocal.data(), mesh.data(),
@@ -599,20 +635,28 @@ py::int_ spglib::BZ_grid_address(array_int bz_grid_address, array_size_t bz_map,
                                  array_int grid_address, array_int mesh,
                                  Lattice const &reciprocal_lattice,
                                  array_int is_shift) {
+    // TODO: Throw if input is unexpected
+    // Otherwise does not seem to have errors associated.
     return spg_relocate_dense_BZ_grid_address(
         (int (*)[3])bz_grid_address.mutable_data(), bz_map.mutable_data(),
         (int (*)[3])grid_address.data(), mesh.data(), reciprocal_lattice.data(),
         is_shift.data());
 }
 py::int_ spglib::delaunay_reduce(Lattice &lattice, py::float_ symprec) {
-    return spg_delaunay_reduce(lattice.data(), symprec);
+    auto val = spg_delaunay_reduce(lattice.data(), symprec);
+    if (val == 0) throw Spglib_classic_exception();
+    return val;
 }
 py::int_ spglib::niggli_reduce(Lattice &lattice, py::float_ eps) {
-    return spg_niggli_reduce(lattice.data(), eps);
+    auto val = spg_niggli_reduce(lattice.data(), eps);
+    if (val == 0) throw Spglib_classic_exception();
+    return val;
 }
 py::int_ spglib::hall_number_from_symmetry(Rotations const &rotations,
                                            Translations const &translations,
                                            py::float_ symprec) {
-    return spg_get_hall_number_from_symmetry(
+    auto val = spg_get_hall_number_from_symmetry(
         rotations.data(), translations.data(), rotations.n_operations, symprec);
+    if (val == 0) throw Spglib_classic_exception();
+    return val;
 }
