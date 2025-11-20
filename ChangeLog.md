@@ -27,6 +27,9 @@ GitHub release pages and in the git history.
 - Switched to using pybind11 for generating the python bindings
 - Added free-threading support using pybind11.
   Requires pybind11 >= 2.13.
+- Deprecated `get_error_message()` and `error` attributes.
+- Python functions can now raise exceptions. To opt-in set `spglib.OLD_ERROR_HANLDING=False`.
+  For more information see the [documentation page][python-exceptions].
 
 ### Fortran API
 
@@ -2269,4 +2272,5 @@ For fixing many warning in many codes and gcc-4.3 related problem
 in bravais.c.
 ```
 
+[python-exceptions]: https://spglib.readthedocs.io/en/stable/exceptions/python.html
 [setuptools-scm]: https://setuptools-scm.readthedocs.io/en/latest/extending/#available-implementations

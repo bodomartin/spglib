@@ -14,4 +14,5 @@ Submodules
    :maxdepth: 4
 
    spglib._internal
+   spglib.error
    spglib.spglib

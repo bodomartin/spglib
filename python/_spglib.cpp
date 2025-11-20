@@ -15,6 +15,29 @@ PYBIND11_MODULE(_spglib, module) {
     using namespace py::literals;
     using namespace spglib;
     module.doc() = "Spglib compiled bindings.";
+
+    // Register the cpp Spglib error with a base class of the python one.
+    auto base_error = py::module_::import("spglib.error").attr("SpglibError");
+    py::register_exception<SpglibError>(module, "SpglibCppError",
+                                        base_error.ptr());
+
+    py::class_<Lattice>(module, "Lattice").def(py::init<array_double>());
+    py::implicitly_convertible<array_double, Lattice>();
+    py::class_<Rotations>(module, "Rotations").def(py::init<array_int>());
+    py::implicitly_convertible<array_int, Rotations>();
+    py::class_<Translations>(module, "Translations")
+        .def(py::init<array_double>());
+    py::implicitly_convertible<array_double, Translations>();
+    py::class_<Symmetries>(module, "Symmetries")
+        .def(py::init<Rotations, Translations>());
+    py::class_<Positions>(module, "Positions").def(py::init<array_double>());
+    py::implicitly_convertible<array_double, Positions>();
+    py::class_<AtomTypes>(module, "AtomTypes").def(py::init<array_int>());
+    py::implicitly_convertible<array_int, AtomTypes>();
+    py::class_<Magmoms>(module, "Magmoms").def(py::init<array_double>());
+    py::implicitly_convertible<array_double, Magmoms>();
+    py::class_<Atoms>(module, "Atoms").def(py::init<Positions, AtomTypes>());
+
     module.def("version_tuple", spglib::version_tuple, "");
     module.def("version_string", spglib::version_string, "");
     module.def("version_full", spglib::version_full, "");
@@ -45,25 +68,38 @@ PYBIND11_MODULE(_spglib, module) {
     module.def(
         "ir_reciprocal_mesh",
         py::overload_cast<array_int, array_int, array_int, array_int, py::int_,
-                          array_double, array_double, array_int, py::float_>(
-            spglib::ir_reciprocal_mesh),
-        "");
-    module.def(
-        "ir_reciprocal_mesh",
-        py::overload_cast<array_int, array_size_t, array_int, array_int,
-                          py::int_, array_double, array_double, array_int,
+                          Lattice const &, Positions const &, AtomTypes const &,
                           py::float_>(spglib::ir_reciprocal_mesh),
-        "");
+        "", py::arg("grid_address"), py::arg("grid_mapping_table").noconvert(),
+        py::arg("mesh"), py::arg("is_shift"), py::arg("is_time_reversal"),
+        py::arg("lattice"), py::arg("positions"), py::arg("atom_types"),
+        py::arg("symprec"));
+    module.def("ir_reciprocal_mesh",
+               py::overload_cast<array_int, array_size_t, array_int, array_int,
+                                 py::int_, Lattice const &, Positions const &,
+                                 AtomTypes const &, py::float_>(
+                   spglib::ir_reciprocal_mesh),
+               "", py::arg("grid_address"),
+               py::arg("grid_mapping_table").noconvert(), py::arg("mesh"),
+               py::arg("is_shift"), py::arg("is_time_reversal"),
+               py::arg("lattice"), py::arg("positions"), py::arg("atom_types"),
+               py::arg("symprec"));
     module.def("stabilized_reciprocal_mesh",
                py::overload_cast<array_int, array_int, array_int, array_int,
-                                 py::int_, array_int, array_double>(
+                                 py::int_, Rotations const &, array_double>(
                    spglib::stabilized_reciprocal_mesh),
-               "");
+               "", py::arg("grid_address"),
+               py::arg("grid_mapping_table").noconvert(), py::arg("mesh"),
+               py::arg("is_shift"), py::arg("is_time_reversal"),
+               py::arg("rotations"), py::arg("qpoints"));
     module.def("stabilized_reciprocal_mesh",
                py::overload_cast<array_int, array_size_t, array_int, array_int,
-                                 py::int_, array_int, array_double>(
+                                 py::int_, Rotations const &, array_double>(
                    spglib::stabilized_reciprocal_mesh),
-               "");
+               "", py::arg("grid_address"),
+               py::arg("grid_mapping_table").noconvert(), py::arg("mesh"),
+               py::arg("is_shift"), py::arg("is_time_reversal"),
+               py::arg("rotations"), py::arg("qpoints"));
     module.def("grid_points_by_rotations", spglib::grid_points_by_rotations,
                "");
     module.def("BZ_grid_points_by_rotations",
@@ -73,5 +109,4 @@ PYBIND11_MODULE(_spglib, module) {
     module.def("niggli_reduce", spglib::niggli_reduce, "");
     module.def("hall_number_from_symmetry", spglib::hall_number_from_symmetry,
                "");
-    module.def("error_message", spglib::error_message, "");
 }
