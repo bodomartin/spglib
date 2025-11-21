@@ -1,6 +1,6 @@
 import pytest
 from spglib.error import SpglibError
-from spglib.spglib import _expand_cell
+from spglib.utils import _expand_cell
 
 
 def test_expand_cell():

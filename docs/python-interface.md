@@ -194,49 +194,49 @@ details, see {ref}`variables_symprec`, {ref}`variables_angle_tolerance`, and
 
 ### Version
 
-- {py:func}`spglib.spglib.get_version`
+- {py:func}`spglib.utils.get_version`
 
 ### Error
 
-- {py:func}`spglib.spglib.get_error_message`
+- {py:func}`spglib.error.get_error_message`
 
 ### Space-group symmetry search
 
-- {py:func}`spglib.spglib.get_symmetry`
-- {py:func}`spglib.spglib.get_symmetry_dataset`
+- {py:func}`spglib.spg.get_symmetry`
+- {py:func}`spglib.spg.get_symmetry_dataset`
 
 ### Space-group type search
 
-- {py:func}`spglib.spglib.get_spacegroup`
+- {py:func}`spglib.spg.get_spacegroup`
 
 ### Standardization and finding primitive cell
 
-- {py:func}`spglib.spglib.standardize_cell`
-- {py:func}`spglib.spglib.find_primitive`
-- {py:func}`spglib.spglib.refine_cell`
+- {py:func}`spglib.cell.standardize_cell`
+- {py:func}`spglib.cell.find_primitive`
+- {py:func}`spglib.cell.refine_cell`
 
 ### Space-group dataset access
 
-- {py:func}`spglib.spglib.get_symmetry_from_database`
-- {py:func}`spglib.spglib.get_spacegroup_type`
-- {py:func}`spglib.spglib.get_spacegroup_type_from_symmetry`
+- {py:func}`spglib.spg.get_symmetry_from_database`
+- {py:func}`spglib.spg.get_spacegroup_type`
+- {py:func}`spglib.spg.get_spacegroup_type_from_symmetry`
 
 ### Magnetic symmetry
 
-- {py:func}`spglib.spglib.get_magnetic_symmetry`
-- {py:func}`spglib.spglib.get_magnetic_symmetry_dataset`
-- {py:func}`spglib.spglib.get_magnetic_spacegroup_type`
-- {py:func}`spglib.spglib.get_magnetic_spacegroup_type_from_symmetry`
-- {py:func}`spglib.spglib.get_magnetic_symmetry_from_database`
+- {py:func}`spglib.msg.get_magnetic_symmetry`
+- {py:func}`spglib.msg.get_magnetic_symmetry_dataset`
+- {py:func}`spglib.msg.get_magnetic_spacegroup_type`
+- {py:func}`spglib.msg.get_magnetic_spacegroup_type_from_symmetry`
+- {py:func}`spglib.msg.get_magnetic_symmetry_from_database`
 
 ### Lattice reduction
 
-- {py:func}`spglib.spglib.niggli_reduce`
-- {py:func}`spglib.spglib.delaunay_reduce`
+- {py:func}`spglib.reduce.niggli_reduce`
+- {py:func}`spglib.reduce.delaunay_reduce`
 
 ### Kpoints
 
-- {py:func}`spglib.spglib.get_ir_reciprocal_mesh`
+- {py:func}`spglib.kpoints.get_ir_reciprocal_mesh`
 
 ```python
 mapping, grid = get_ir_reciprocal_mesh(mesh, cell, is_shift=[0, 0, 0])

@@ -9,13 +9,9 @@ import numpy as np
 from numpy._typing import ArrayLike
 
 from . import _spglib
-from .spglib import (
-    SpgCell,
-    SpglibDataset,
-    _expand_cell,
-    _set_no_error,
-    _set_or_throw_error,
-)
+from .error import _set_no_error, _set_or_throw_error
+from .spg import SpgCell, SpglibDataset
+from .utils import _expand_cell
 
 __all__ = [
     "get_pointgroup",

@@ -1,7 +1,7 @@
-spglib.spglib module
-====================
+spglib.spg module
+=================
 
-.. automodule:: spglib.spglib
+.. automodule:: spglib.spg
    :members:
    :private-members:
    :show-inheritance:

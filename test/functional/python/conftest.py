@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 import spglib
+import spglib.error
 import yaml
 
 if TYPE_CHECKING:
@@ -20,7 +21,7 @@ if TYPE_CHECKING:
 
 TEST_DIR = Path(__file__).parent
 
-spglib.spglib.OLD_ERROR_HANDLING = False
+spglib.error.OLD_ERROR_HANDLING = False
 
 
 def get_cell(fname: Path) -> TestCell:

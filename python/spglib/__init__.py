@@ -7,36 +7,10 @@
 #  backwards compatibility
 from ._internal import *  # noqa: F403
 from ._version import __version__, __version_tuple__  # noqa: F401
-
-# fmt: off
-from .spglib import (  # noqa: F401
-    MagneticSpaceGroupType,
-    SpaceGroupType,
-    SpglibDataset,
-    SpglibMagneticDataset,
-    delaunay_reduce,
-    find_primitive,
-    get_error_message,
-    get_hall_number_from_symmetry,
-    get_ir_reciprocal_mesh,
-    get_magnetic_spacegroup_type,
-    get_magnetic_spacegroup_type_from_symmetry,
-    get_magnetic_symmetry,
-    get_magnetic_symmetry_dataset,
-    get_magnetic_symmetry_from_database,
-    get_spacegroup,
-    get_spacegroup_type,
-    get_spacegroup_type_from_symmetry,
-    get_symmetry,
-    get_symmetry_dataset,
-    get_symmetry_from_database,
-    get_version,
-    niggli_reduce,
-    refine_cell,
-    spg_get_commit,
-    spg_get_version,
-    spg_get_version_full,
-    standardize_cell,
-)
-
-# fmt: on
+from .cell import *  # noqa: F403
+from .error import *  # noqa: F403
+from .kpoints import *  # noqa: F403
+from .msg import *  # noqa: F403
+from .reduce import *  # noqa: F403
+from .spg import *  # noqa: F403
+from .utils import *  # noqa: F403
