@@ -55,7 +55,7 @@ _spglib_error = ""
 
 
 def _check_OLD_ERROR_HANDLING() -> bool:
-    env_var = os.environ.get("SPGLIB_OLD_ERROR_HANLDING")
+    env_var = os.environ.get("SPGLIB_OLD_ERROR_HANDLING")
     if env_var is not None:
         if env_var.lower() in ("false", "0"):
             return False
