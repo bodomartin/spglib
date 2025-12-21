@@ -1,12 +1,9 @@
 from __future__ import annotations
 
 import pathlib
-import warnings
 from typing import TYPE_CHECKING
 
 import numpy as np
-import pytest
-import spglib
 from spglib import (
     MagneticSpaceGroupType,
     find_primitive,
@@ -16,7 +13,6 @@ from spglib import (
     get_spacegroup,
     get_spacegroup_type,
     get_symmetry_dataset,
-    niggli_reduce,
     standardize_cell,
 )
 
