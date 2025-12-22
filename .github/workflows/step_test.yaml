@@ -25,11 +25,11 @@ jobs:
       matrix:
         toolchain: [ gcc, llvm, intel ]
         include:
-          - os: macos-13
-            toolchain: macos
           - os: macos-latest
             toolchain: macos
           - os: windows-latest
+            toolchain: windows
+          - os: windows-11-arm
             toolchain: windows
     steps:
       - name: Enable msvc toolchain on windows
