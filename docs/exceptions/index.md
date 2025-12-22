@@ -12,4 +12,3 @@ maxdepth: 1
 ---
 python
 ```
-
