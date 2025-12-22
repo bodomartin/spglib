@@ -7,8 +7,8 @@
 
 .. deprecated:: 2.7.0
    Currently the exception raising is opt-in, requiring to set
-   :py:attr:`spglib.spglib.OLD_ERROR_HANDLING` to ``False``, otherwise
-   all exceptions are redirected to :py:func:`spglib.spglib.get_error_message`.
+   :py:attr:`spglib.OLD_ERROR_HANDLING` to ``False``, otherwise
+   all exceptions are redirected to :py:func:`spglib.get_error_message`.
 
    Starting from version 2.8.0 the default option will be flipped to always
    throw these exceptions, and the old error handling will be removed in
