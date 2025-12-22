@@ -30,7 +30,7 @@ jobs:
           - os: windows-latest
             toolchain: windows
           - os: windows-11-arm
-            toolchain: windows            
+            toolchain: windows
     steps:
       - name: Enable msvc toolchain on windows
         uses: ilammy/msvc-dev-cmd@v1
