@@ -7,13 +7,31 @@
 
 .. deprecated:: 2.7.0
    Currently the exception raising is opt-in, requiring to set
-   :py:attr:`spglib.OLD_ERROR_HANDLING` to ``False``, otherwise
-   all exceptions are redirected to :py:func:`spglib.get_error_message`.
+   :py:attr:`spglib.error.OLD_ERROR_HANDLING` to ``False``, otherwise
+   all exceptions are redirected to :py:func:`spglib.error.get_error_message`.
+
+   For example you could use the following snippet to opt-in this new
+   interface.
+
+   .. code-block:: python
+
+       try:
+           spglib.error.OLD_ERROR_HANDLING = False
+       except AttributeError:
+           pass
+
+   or alternatively you can enable it by setting the environment variable
+   ``SPGLIB_OLD_ERROR_HANDLING`` to either ``0`` or ``False``.
 
    Starting from version 2.8.0 the default option will be flipped to always
    throw these exceptions, and the old error handling will be removed in
    version 3.0. Please test out the functionality and provide feedback on the
    GitHub issues.
+
+   Note that :py:attr:`spglib.error.OLD_ERROR_HANDLING` will be removed in a
+   future version, so the snippet above is not advised to be used for long-term
+   support. Use it only for experimentations and preparing the code base to
+   ``try ... except`` the spglib api calls and wait for the 2.8.0 release.
 
 .. versionadded:: 2.7.0
 """
