@@ -49,6 +49,7 @@ from ._compat.warnings import deprecated
 __all__ = [
     "SpglibError",
     "get_error_message",
+    "OLD_ERROR_HANDLING",
 ]
 
 
