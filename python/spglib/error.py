@@ -115,8 +115,6 @@ def get_error_message() -> str:
         This method is not thread safe, i.e., only safely usable
         when calling one spglib method per process.
 
-    Notes
-    -----
     .. versionadded:: 1.9.5
     .. deprecated:: 2.7.0
 
