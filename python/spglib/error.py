@@ -54,7 +54,35 @@ __all__ = [
 
 
 class SpglibError(Exception):
-    """Base exception type for all errors raised by spglib."""
+    r"""Base exception type for all errors raised by spglib.
+
+    Use this error type in a ``try ... except`` to process any physical or
+    other spglib defined errors, such as the number of atom types not matching
+    the positions or the distance between atoms being too close. For example:
+
+    .. code-block:: python
+
+       symprec = 1e-10
+       while (symprec<1):
+           try:
+               dataset = spglib.get_symmetry(cell, symprec)
+           except spglib.SpglibError as exc:
+               # Expected issues by spglib
+               # Try again if the symprec was too tight
+               if str(exc) == "too close distance between atoms":
+                   symprec *= 10
+                   continue
+               # Otherwise fail gracefully
+               print(f"Failed to calculate symmetry:\n{exc}")
+               break
+           except Exception:
+               # Unexpected issues, raise as an unexpected exception
+               raise
+
+    .. note::
+       More fine-grained exceptions are not defined yet. Please provide
+       feedback on what kind of exception separation would be desired.
+    """
 
 
 # TODO: Provide more exception types.
