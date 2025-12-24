@@ -7,13 +7,31 @@
 
 .. deprecated:: 2.7.0
    Currently the exception raising is opt-in, requiring to set
-   :py:attr:`spglib.spglib.OLD_ERROR_HANDLING` to ``False``, otherwise
-   all exceptions are redirected to :py:func:`spglib.spglib.get_error_message`.
+   :py:attr:`spglib.error.OLD_ERROR_HANDLING` to ``False``, otherwise
+   all exceptions are redirected to :py:func:`spglib.error.get_error_message`.
+
+   For example you could use the following snippet to opt-in this new
+   interface.
+
+   .. code-block:: python
+
+       try:
+           spglib.error.OLD_ERROR_HANDLING = False
+       except AttributeError:
+           pass
+
+   or alternatively you can enable it by setting the environment variable
+   ``SPGLIB_OLD_ERROR_HANDLING`` to either ``0`` or ``False``.
 
    Starting from version 2.8.0 the default option will be flipped to always
    throw these exceptions, and the old error handling will be removed in
    version 3.0. Please test out the functionality and provide feedback on the
    GitHub issues.
+
+   Note that :py:attr:`spglib.error.OLD_ERROR_HANDLING` will be removed in a
+   future version, so the snippet above is not advised to be used for long-term
+   support. Use it only for experimentations and preparing the code base to
+   ``try ... except`` the spglib api calls and wait for the 2.8.0 release.
 
 .. versionadded:: 2.7.0
 """
@@ -31,11 +49,40 @@ from ._compat.warnings import deprecated
 __all__ = [
     "SpglibError",
     "get_error_message",
+    "OLD_ERROR_HANDLING",
 ]
 
 
 class SpglibError(Exception):
-    """Base exception type for all errors raised by spglib."""
+    r"""Base exception type for all errors raised by spglib.
+
+    Use this error type in a ``try ... except`` to process any physical or
+    other spglib defined errors, such as the number of atom types not matching
+    the positions or the distance between atoms being too close. For example:
+
+    .. code-block:: python
+
+       symprec = 1e-10
+       while (symprec<1):
+           try:
+               dataset = spglib.get_symmetry(cell, symprec)
+           except spglib.SpglibError as exc:
+               # Expected issues by spglib
+               # Try again if the symprec was too tight
+               if str(exc) == "too close distance between atoms":
+                   symprec *= 10
+                   continue
+               # Otherwise fail gracefully
+               print(f"Failed to calculate symmetry:\n{exc}")
+               break
+           except Exception:
+               # Unexpected issues, raise as an unexpected exception
+               raise
+
+    .. note::
+       More fine-grained exceptions are not defined yet. Please provide
+       feedback on what kind of exception separation would be desired.
+    """
 
 
 # TODO: Provide more exception types.
@@ -97,8 +144,6 @@ def get_error_message() -> str:
         This method is not thread safe, i.e., only safely usable
         when calling one spglib method per process.
 
-    Notes
-    -----
     .. versionadded:: 1.9.5
     .. deprecated:: 2.7.0
 
