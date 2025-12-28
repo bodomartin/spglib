@@ -13,7 +13,7 @@ GitHub release pages and in the git history.
 
 ## v2.7.0 (27 Dec. 2025)
 
-## Main changes
+### Main changes
 
 - [[#612]](https://github.com/spglib/spglib/pull/612) Improve implementation of
   #610.
